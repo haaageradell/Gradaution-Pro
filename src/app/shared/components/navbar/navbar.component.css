@@ -1,0 +1,69 @@
+/* Small CSS for the "Figma-like" feel (hover + active). */
+
+.nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: #111827; /* gray-900 */
+  text-decoration: none;
+  transition: color 420ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -10px;
+  height: 2px;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: rgba(17, 24, 39, 0.7);
+  transition: transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.nav-link:hover {
+  color: #0f172a; /* slate-900 */
+  transform: translateY(-1px);
+}
+
+.nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+.nav-link.is-active::after {
+  transform: scaleX(1);
+}
+
+.nav-link--mobile::after {
+  bottom: -6px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  width: 40px;
+  border-radius: 9999px;
+  color: #111827;
+  transition: background-color 420ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    color 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.icon-btn:hover {
+  background: rgba(17, 24, 39, 0.06);
+  transform: translateY(-1px);
+}
+
+.icon-btn:focus-visible,
+.nav-link:focus-visible {
+  outline: 2px solid rgba(17, 24, 39, 0.25);
+  outline-offset: 3px;
+  border-radius: 10px;
+}
