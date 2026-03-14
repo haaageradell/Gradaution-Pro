@@ -17,7 +17,7 @@
   content: "";
   position: absolute;
   left: 0;
-  bottom: -10px;
+  bottom: -12px;
   height: 2px;
   width: 100%;
   transform: scaleX(0);
@@ -40,7 +40,7 @@
 }
 
 .nav-link--mobile::after {
-  bottom: -6px;
+  bottom: -8px;
 }
 
 .icon-btn {
