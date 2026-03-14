@@ -1,5 +1,23 @@
+
 @import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
 @import "flowbite/src/themes/default";
 @plugin "flowbite/plugin";
 @source "../node_modules/flowbite";
+@utility container {
+    margin-inline: auto;
+  }
+.main-text{
+    font-family: 'Inter', sans-serif;
+    font-size: 50px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #441752;
+    margin-bottom: 26px;
+  }
+ /* for angular material */
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+router-outlet + * {
+    flex: 1;
+  }
