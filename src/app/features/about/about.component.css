@@ -1,0 +1,35 @@
+.about-section-2 {
+  background: #fff;
+}
+
+.about-section-2__image {
+  overflow: hidden;
+}
+
+/* Virtual Fit Section */
+.virtual-fit-section {
+  background: #fff;
+}
+
+.virtual-fit-card {
+  overflow: hidden;
+  border-radius: 8px;
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.virtual-fit-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.virtual-fit-card__img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 280/380;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.virtual-fit-card:hover .virtual-fit-card__img {
+  transform: scale(1.05);
+}
