@@ -1,1 +1,194 @@
-<p>login works!</p>
+<div class="flex min-h-screen w-full">
+  <!-- Left: Login form -->
+  <div
+    class="flex flex-1 flex-col items-center justify-center bg-white px-12 py-16 relative z-10"
+  >
+    <div class="w-full max-w-md flex flex-col items-center">
+      <h1 class="text-4xl font-bold text-[#441752] text-center">
+        Welcome Back!
+      </h1>
+      <p class="text-base text-[#AAAAAA] text-center mt-2 mb-10">
+        Please login or sign up to continue our app
+      </p>
+
+      <form
+        [formGroup]="loginForm"
+        (ngSubmit)="onSubmit()"
+        class="w-full flex flex-col items-center"
+      >
+        <!-- Email -->
+        <div class="w-full mb-4">
+          <div class="relative">
+            <i
+              class="fa-regular fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[#AAAAAA] text-sm"
+            ></i>
+
+            <input
+              type="email"
+              formControlName="email"
+              placeholder="Email"
+              class="w-full rounded border-0 bg-[#EEEEF8] py-3 pl-11 pr-4 text-gray-800 placeholder-[#9983A5] focus:outline-none focus:ring-2 focus:ring-[#5B21B6]/30 transition"
+            />
+          </div>
+
+          @if (
+            loginForm.get("email")?.invalid && loginForm.get("email")?.touched
+          ) {
+            <p class="text-red-500 text-sm mt-1">Please enter a valid email</p>
+          }
+        </div>
+
+        <!-- Password -->
+        <div class="w-full mb-4">
+          <div class="relative">
+            <i
+              class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[#AAAAAA] text-sm"
+            ></i>
+
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Password"
+              class="w-full border-0 rounded bg-[#EEEEF8] py-3 pl-11 pr-12 text-gray-800 placeholder-[#9983A5] focus:outline-none focus:ring-2 focus:ring-[#5B21B6]/30 transition"
+            />
+
+            <button
+              type="button"
+              (click)="togglePasswordVisibility()"
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-[#AAAAAA] hover:text-gray-600 focus:outline-none"
+              aria-label="Toggle password visibility"
+            >
+              @if (showPassword) {
+                <i class="fa-solid fa-eye text-sm"></i>
+              } @else {
+                <i class="fa-solid fa-eye-slash text-sm"></i>
+              }
+            </button>
+          </div>
+
+          @if (
+            loginForm.get("password")?.invalid &&
+            loginForm.get("password")?.touched
+          ) {
+            <p class="text-red-500 text-sm mt-1">Password is required</p>
+          }
+        </div>
+
+        <!-- Remember me & Forgot password -->
+        <div class="w-full flex items-center justify-between mb-6">
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              role="switch"
+              [attr.aria-checked]="rememberMe"
+              (click)="rememberMe = !rememberMe"
+              class="relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#5B21B6]/30"
+              [class.bg-[#441752]]="rememberMe"
+              [class.bg-gray-300]="!rememberMe"
+            >
+              <span
+                class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition translate-y-0.5"
+                [class.translate-x-6]="rememberMe"
+                [class.translate-x-0.5]="!rememberMe"
+              ></span>
+            </button>
+            <span class="text-sm text-[#441752]">Remember me</span>
+          </div>
+          <a
+            href="#"
+            class="text-sm text-[#E0BBE4] hover:underline focus:outline-none"
+            >Forgot Password?</a
+          >
+        </div>
+
+        <button
+          type="submit"
+          class="w-full rounded-lg bg-[#441752] py-3 text-xl font-semibold text-white hover:bg-[#612b72] focus:outline-none focus:ring-2 focus:ring-[#5B21B6]/50 transition mb-8"
+        >
+          Log In
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="flex items-center gap-4 w-full mb-6">
+        <span class="flex-1 h-px bg-gray-300"></span>
+        <span class="text-sm text-[#441752]">or continue with</span>
+        <span class="flex-1 h-px bg-gray-300"></span>
+      </div>
+
+      <!-- Social icons -->
+      <div class="flex items-center justify-center gap-6 mb-8">
+        <!-- Google -->
+        <a
+          href="https://accounts.google.com"
+          target="_blank"
+          class="text-2xl hover:scale-110 transition"
+        >
+          <i class="fa-brands fa-google" style="color: #000000"></i>
+        </a>
+
+        <!-- Facebook -->
+        <a
+          href="https://facebook.com"
+          target="_blank"
+          class="text-2xl hover:scale-110 transition"
+        >
+          <i class="fa-brands fa-facebook" style="color: #1877f2"></i>
+        </a>
+
+        <!-- Apple -->
+        <a
+          href="https://appleid.apple.com"
+          target="_blank"
+          class="text-2xl hover:scale-110 transition"
+        >
+          <i class="fa-brands fa-apple" style="color: black"></i>
+        </a>
+      </div>
+
+      <p class="text-center text-sm text-gray-300">
+        Don't have an account?
+        <a
+          routerLink="/register"
+          class="text-[#441752] underline hover:no-underline focus:outline-none"
+          >Sign Up</a
+        >
+      </p>
+    </div>
+
+    <!-- Organic curve: white shape on right edge of left column -->
+    <div
+      class="absolute right-0 top-0 bottom-0 w-28 flex-shrink-0 pointer-events-none"
+      aria-hidden="true"
+    >
+      <svg
+        class="h-full w-full"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+      >
+        <path d="M 0 0 L 100 0 C 35 0 35 100 100 100 L 0 100 Z" fill="white" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- Right: Welcome section -->
+  <div class="relative flex flex-1 items-center justify-center overflow-hidden">
+    <!-- wave image -->
+    <img
+      src="/auth/login.png"
+      class="absolute left-0 top-0 h-full w-full object-cover"
+    />
+
+    <!-- content -->
+    <div class="relative z-10 text-center px-10">
+      <h2 class="text-4xl font-bold text-[#441752]">
+        Welcome Back To Optivio!
+      </h2>
+
+      <p class="text-lg text-[#441752] mt-4 max-w-md mx-auto">
+        Discover your perfect look with a <br />
+        <span> virtual try-on</span>
+      </p>
+    </div>
+  </div>
+</div>
