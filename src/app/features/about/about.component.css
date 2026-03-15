@@ -1,0 +1,10 @@
+.about-section-2 {
+  background: #fff;
+}
+
+.about-section-2__image {
+  border: 1px solid #2563eb;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
