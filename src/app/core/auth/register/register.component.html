@@ -1,1 +1,229 @@
-<p>register works!</p>
+<div class="flex min-h-screen w-full overflow-hidden">
+  <!-- Left: Welcome section (mirrored from login right) -->
+  <div
+    class="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-12"
+  >
+    <!-- wave image -->
+    <img
+      src="/auth/register.png"
+      class="absolute right-0 top-0 h-full w-full object-cover pointer-events-none"
+    />
+
+    <!-- content -->
+    <div class="relative z-10 text-center px-10">
+      <h2 class="text-4xl font-bold text-[#441752]">Welcome To Optivio!</h2>
+
+      <p class="text-lg text-[#441752] mt-4 max-w-md mx-auto">
+        Discover your perfect look with a <br />
+        virtual try-on
+      </p>
+    </div>
+  </div>
+
+  <!-- Right: Sign Up form -->
+  <div
+    class="flex flex-1 flex-col items-center justify-center bg-white px-12 relative z-10"
+  >
+    <div class="w-full max-w-md flex flex-col items-center">
+      <h1 class="text-4xl font-bold text-[#441752] text-center">
+        Create Account
+      </h1>
+      <p class="text-base text-[#AAAAAA] text-center mt-2 mb-10">
+        Create a new account
+      </p>
+
+      <form
+        [formGroup]="signupForm"
+        (ngSubmit)="onSubmit()"
+        class="w-full flex flex-col items-center"
+      >
+        <!-- Username -->
+        <div class="w-full mb-4">
+          <div class="relative">
+            <i
+              class="fa-regular fa-user absolute left-4 top-1/2 -translate-y-1/2 text-[#AAAAAA] text-sm"
+            ></i>
+            <input
+              type="text"
+              formControlName="username"
+              placeholder="Username"
+              class="w-full rounded border-0 bg-[#EEEEF8] py-3 pl-11 pr-4 text-gray-800 placeholder-[#9983A5] focus:outline-none focus:ring-2 focus:ring-[#5B21B6]/30 transition"
+            />
+          </div>
+          @if (
+            signupForm.get("username")?.invalid &&
+            signupForm.get("username")?.touched
+          ) {
+            <p class="text-red-500 text-sm mt-1">
+              Username is required (min 2 characters)
+            </p>
+          }
+        </div>
+
+        <!-- Email -->
+        <div class="w-full mb-4">
+          <div class="relative">
+            <i
+              class="fa-regular fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[#AAAAAA] text-sm"
+            ></i>
+            <input
+              type="email"
+              formControlName="email"
+              placeholder="Email"
+              class="w-full rounded border-0 bg-[#EEEEF8] py-3 pl-11 pr-4 text-gray-800 placeholder-[#9983A5] focus:outline-none focus:ring-2 focus:ring-[#5B21B6]/30 transition"
+            />
+          </div>
+          @if (
+            signupForm.get("email")?.invalid && signupForm.get("email")?.touched
+          ) {
+            <p class="text-red-500 text-sm mt-1">Please enter a valid email</p>
+          }
+        </div>
+
+        <!-- Phone -->
+        <div class="w-full mb-4">
+          <div class="relative">
+            <i
+              class="fa-solid fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-[#AAAAAA] text-sm"
+            ></i>
+            <input
+              type="tel"
+              formControlName="phone"
+              placeholder="Phone"
+              class="w-full rounded border-0 bg-[#EEEEF8] py-3 pl-11 pr-4 text-gray-800 placeholder-[#9983A5] focus:outline-none focus:ring-2 focus:ring-[#5B21B6]/30 transition"
+            />
+          </div>
+          @if (
+            signupForm.get("phone")?.invalid && signupForm.get("phone")?.touched
+          ) {
+            <p class="text-red-500 text-sm mt-1">
+              Please enter a valid phone number
+            </p>
+          }
+        </div>
+
+        <!-- Password -->
+        <div class="w-full mb-4">
+          <div class="relative">
+            <i
+              class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[#AAAAAA] text-sm"
+            ></i>
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Password"
+              class="w-full border-0 rounded bg-[#EEEEF8] py-3 pl-11 pr-12 text-gray-800 placeholder-[#9983A5] focus:outline-none focus:ring-2 focus:ring-[#5B21B6]/30 transition"
+            />
+            <button
+              type="button"
+              (click)="togglePasswordVisibility()"
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-[#AAAAAA] hover:text-gray-600 focus:outline-none"
+              aria-label="Toggle password visibility"
+            >
+              @if (showPassword) {
+                <i class="fa-solid fa-eye text-sm"></i>
+              } @else {
+                <i class="fa-solid fa-eye-slash text-sm"></i>
+              }
+            </button>
+          </div>
+          @if (
+            signupForm.get("password")?.invalid &&
+            signupForm.get("password")?.touched
+          ) {
+            <p class="text-red-500 text-sm mt-1">
+              Password is required (min 6 characters)
+            </p>
+          }
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="w-full mb-6">
+          <div class="relative">
+            <i
+              class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[#AAAAAA] text-sm"
+            ></i>
+            <input
+              [type]="showConfirmPassword ? 'text' : 'password'"
+              formControlName="confirmPassword"
+              placeholder="Confirm Password"
+              class="w-full border-0 rounded bg-[#EEEEF8] py-3 pl-11 pr-12 text-gray-800 placeholder-[#9983A5] focus:outline-none focus:ring-2 focus:ring-[#5B21B6]/30 transition"
+            />
+            <button
+              type="button"
+              (click)="toggleConfirmPasswordVisibility()"
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-[#AAAAAA] hover:text-gray-600 focus:outline-none"
+              aria-label="Toggle confirm password visibility"
+            >
+              @if (showConfirmPassword) {
+                <i class="fa-solid fa-eye text-sm"></i>
+              } @else {
+                <i class="fa-solid fa-eye-slash text-sm"></i>
+              }
+            </button>
+          </div>
+          @if (
+            signupForm.get("confirmPassword")?.invalid &&
+            signupForm.get("confirmPassword")?.touched
+          ) {
+            <p class="text-red-500 text-sm mt-1">
+              @if (signupForm.errors?.["passwordMismatch"]) {
+                Passwords do not match
+              } @else {
+                Please confirm your password
+              }
+            </p>
+          }
+        </div>
+
+        <button
+          type="submit"
+          class="w-full rounded-lg bg-[#441752] py-3 text-xl font-semibold text-white hover:bg-[#612b72] focus:outline-none focus:ring-2 focus:ring-[#5B21B6]/50 transition mb-8"
+        >
+          Sign Up
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="flex items-center gap-4 w-full mb-6">
+        <span class="flex-1 h-px bg-gray-300"></span>
+        <span class="text-sm text-[#441752]">or continue with</span>
+        <span class="flex-1 h-px bg-gray-300"></span>
+      </div>
+
+      <!-- Social icons -->
+      <div class="flex items-center justify-center gap-6 mb-8">
+        <a
+          href="https://accounts.google.com"
+          target="_blank"
+          class="text-2xl hover:scale-110 transition"
+        >
+          <i class="fa-brands fa-google" style="color: #f73e31d2"></i>
+        </a>
+        <a
+          href="https://facebook.com"
+          target="_blank"
+          class="text-2xl hover:scale-110 transition"
+        >
+          <i class="fa-brands fa-facebook" style="color: #1877f2"></i>
+        </a>
+        <a
+          href="https://appleid.apple.com"
+          target="_blank"
+          class="text-2xl hover:scale-110 transition"
+        >
+          <i class="fa-brands fa-apple" style="color: black"></i>
+        </a>
+      </div>
+
+      <p class="text-center text-sm text-gray-300">
+        Already have an account?
+        <a
+          routerLink="/login"
+          class="text-[#441752] underline hover:no-underline focus:outline-none"
+          >Log In</a
+        >
+      </p>
+    </div>
+  </div>
+</div>
