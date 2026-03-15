@@ -8,5 +8,9 @@ import { RouterLink } from '@angular/router';
   styleUrl: './about.component.css',
 })
 export class AboutComponent {
-  productPlaceholders = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  virtualFitImages = [
+    { src: '/images/boy.png', alt: 'Man with glasses' },
+    { src: '/images/us-glasses.png', alt: 'Couple with glasses' },
+    { src: '/images/girl.png', alt: 'Woman with sunglasses' },
+  ];
 }

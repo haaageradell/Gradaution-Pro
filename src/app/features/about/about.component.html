@@ -1,16 +1,16 @@
-<div class="about-page pt-24 pb-16">
+<div class="about-page pt-35">
   <div class="mx-auto max-w-7xl px-6 md:px-10 lg:px-14">
     <!-- Hero Section -->
     <section class="mb-16 lg:mb-24">
       <div class="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-16">
-        <div class="flex-1">
+        <div class="flex-1 pt-5">
           <h1
             class="mb-6 text-3xl font-bold tracking-tight text-gray-900 md:text-4xl lg:text-[2.5rem]"
           >
             Welcome to Optivio! Try on glasses virtually in 3D and find the
             perfect fit instantly.
           </h1>
-          <p class="mb-8 text-base leading-relaxed text-gray-600 md:text-lg">
+          <p class="mb-8 text-base leading-relaxed text-gray-400 md:text-lg">
             Experience the future of eyewear shopping. Our cutting-edge 3D
             try-on technology lets you see how glasses look on you before you
             buy. No more guesswork – just the perfect pair for your unique style
@@ -19,7 +19,7 @@
           <div class="flex flex-wrap items-center gap-6">
             <a
               routerLink="/home"
-              class="inline-flex items-center justify-center rounded-lg border-2 border-gray-400 bg-[#EEEEF8] px-6 py-3 text-sm font-medium text-gray-900 transition hover:bg-[#E5E5F0] focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              class="inline-flex items-center justify-center rounded-[30px] bg-[#EEEEF8] px-6 py-3 text-sm font-medium text-gray-900 transition hover:bg-[#E5E5F0] focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
             >
               Shop Now
             </a>
@@ -36,14 +36,14 @@
         <div class="flex flex-1 justify-center lg:justify-end">
           <div class="relative flex">
             <img
-              src="https://picsum.photos/280/350?random=1"
+              src="/images/Fashio Shows.png"
               alt="Placeholder - woman with glasses"
-              class="relative z-10 mt-16 h-72 w-56 rounded-2xl object-cover shadow-lg md:mt-20 md:h-80 md:w-64 lg:mt-24 lg:h-96 lg:w-72"
+              class="relative z-10 mt-16 h-72 w-56 rounded-xxs object-cover shadow-lg md:mt-20 md:h-80 md:w-64 lg:mt-24 lg:h-96 lg:w-72"
             />
             <img
-              src="https://picsum.photos/280/350?random=2"
+              src="/images/Fashion Brands.png"
               alt="Placeholder - man with glasses"
-              class="relative z-0 -ml-24 h-72 w-56 rounded-2xl object-cover shadow-lg md:-ml-28 md:h-80 md:w-64 lg:-ml-32 lg:h-96 lg:w-72"
+              class="relative z-0 -ml-24 h-72 w-56 rounded-xxs object-cover shadow-lg md:-ml-28 md:h-80 md:w-64 lg:-ml-32 lg:h-96 lg:w-72"
             />
           </div>
         </div>
@@ -52,12 +52,10 @@
 
     <!-- Secondary Section -->
     <section class="about-section-2 mb-16 lg:mb-24">
-      <div
-        class="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-20"
-      >
+      <div class="grid grid-cols-1 items-center gap-6 lg:grid-cols-2 lg:gap-10">
         <div class="flex flex-col justify-center">
-          <p class="max-w-xl text-lg leading-[1.7] text-gray-900">
-            At OptiVio, we believe glasses aren't just about better vision —
+          <p class="max-w-xl text-2xl leading-[1.7] text-gray-900">
+            At Optivio, we believe glasses aren't just about better vision —
             they're about expressing who you are. Our goal is to make eyewear
             shopping effortless, stylish, and fun.
           </p>
@@ -65,9 +63,9 @@
         <div class="flex justify-center lg:justify-end">
           <figure class="about-section-2__image">
             <img
-              src="https://picsum.photos/600/400?random=5"
+              src="/images/couple.png"
               alt="People wearing glasses"
-              class="block aspect-[3/2] w-full max-w-md object-cover"
+              class="block aspect-3/2 w-full max-w-full object-cover lg:min-w-lg lg:max-w-2xl rounded-[7px]"
             />
           </figure>
         </div>
@@ -75,24 +73,83 @@
     </section>
 
     <!-- Virtual Fit Section -->
-    <section>
+    <section class="virtual-fit-section">
       <h2
-        class="mb-10 text-center text-2xl font-bold text-gray-900 md:text-3xl"
+        class="mb-12 text-center text-2xl font-semibold tracking-tight text-gray-900 md:text-3xl"
       >
-        Virtual Fit, Real You!
+        Virtual Fit, Real You !
       </h2>
-      <div
-        class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 lg:gap-6"
-      >
-        @for (i of productPlaceholders; track i) {
-          <div class="group overflow-hidden rounded-xl bg-gray-100">
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-8 md:gap-10">
+        @for (img of virtualFitImages; track img.src) {
+          <div class="virtual-fit-card group">
             <img
-              [src]="'https://picsum.photos/300/300?random=' + (10 + i)"
-              [alt]="'Placeholder product ' + (i + 1)"
-              class="h-40 w-full object-cover transition group-hover:scale-105 sm:h-48 md:h-52"
+              [src]="img.src"
+              [alt]="img.alt"
+              class="virtual-fit-card__img"
             />
           </div>
         }
+      </div>
+    </section>
+
+    <!-- Why Choose Us Section -->
+    <section class="why-choose-section mt-20 lg:mt-28">
+      <div
+        class="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16"
+      >
+        <!-- Image -->
+        <div class="flex justify-center lg:justify-start">
+          <img
+            src="/images/glasses.png"
+            alt="Collection of glasses"
+            class="w-full max-w-md rounded-[5px] object-cover shadow-sm"
+          />
+        </div>
+
+        <!-- Text -->
+        <div class="max-w-xl">
+          <h2 class="mb-6 text-2xl font-bold text-gray-900 md:text-3xl">
+            Why choose us?
+          </h2>
+
+          <p class="text-2xl leading-[1.8] text-gray-900 md:text-xl max-w-lg">
+            We blend fashion and innovation to make eyewear shopping easier and
+            more enjoyable, allowing you to explore a wide range of styles and
+            instantly see how each frame looks on your face with our virtual
+            try-on technology, so you can confidently choose glasses that truly
+            match your personality, style, and face shape without the usual
+            guesswork or hassle
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trusted Online Shopping Section -->
+    <section class="trusted-shopping-section mt-20 lg:mt-28">
+      <div
+        class="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16"
+      >
+        <!-- Text -->
+        <div class="max-w-lg">
+          <h2 class="mb-6 text-2xl font-bold text-gray-900 md:text-3xl">
+            Trusted Online Shopping
+          </h2>
+
+          <p class="text-xl leading-[1.8] text-gray-700 md:text-2xl">
+            We’re passionate about giving you the best experience — from secure
+            checkout to fast delivery and easy returns. Every frame is crafted
+            with care for lasting comfort, quality, and style.
+          </p>
+        </div>
+
+        <!-- Image -->
+        <div class="flex justify-center lg:justify-end">
+          <img
+            src="/images/us-glasses2.png"
+            alt="People wearing sunglasses"
+            class="w-full max-w-xl rounded-[8px] object-cover shadow-sm"
+          />
+        </div>
       </div>
     </section>
   </div>
