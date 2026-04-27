@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import {
   FormBuilder,
   FormGroup,
@@ -8,7 +9,22 @@ import {
   ValidationErrors,
   ValidatorFn,
 } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { RegisterRequest, RegisterResponse } from '../../models/auth.models';
+import { catchError, finalize, throwError } from 'rxjs';
+
+const PASSWORD_COMPLEXITY_PATTERN =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
+interface BackendRegisterPayload {
+  FirstName: string;
+  LastName: string;
+  Email: string;
+  PhoneNumber: string;
+  Password: string;
+  ConfirmPassword: string;
+}
 
 function passwordMatchValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -29,14 +45,25 @@ export class RegisterComponent {
   signupForm: FormGroup;
   showPassword = false;
   showConfirmPassword = false;
+  errorMessage = '';
+  isLoading = false;
 
-  constructor(private fb: FormBuilder) {
+  private readonly isBrowser: boolean;
+
+  constructor(
+    private readonly fb: FormBuilder,
+    private readonly authService: AuthService,
+    private readonly router: Router,
+    @Inject(PLATFORM_ID) private readonly platformId: object
+  ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
     this.signupForm = this.fb.nonNullable.group(
       {
-        username: ['', [Validators.required, Validators.minLength(2)]],
+        firstName: ['', [Validators.required, Validators.minLength(2)]],
+        lastName: ['', [Validators.required, Validators.minLength(2)]],
         email: ['', [Validators.required, Validators.email]],
         phone: ['', [Validators.required, Validators.pattern(/^[\d\s\-\+\(\)]{10,}$/)]],
-        password: ['', [Validators.required, Validators.minLength(6)]],
+        password: ['', [Validators.required, Validators.pattern(PASSWORD_COMPLEXITY_PATTERN)]],
         confirmPassword: ['', Validators.required],
       },
       { validators: passwordMatchValidator() }
@@ -52,12 +79,52 @@ export class RegisterComponent {
   }
 
   onSubmit(): void {
+    if (this.isLoading) return;
+
     if (this.signupForm.invalid) {
       this.signupForm.markAllAsTouched();
       return;
     }
-    const value = this.signupForm.getRawValue();
-    // TODO: call auth service
-    console.log('Sign Up', value);
+
+    this.errorMessage = '';
+    this.isLoading = true;
+    const { firstName, lastName, email, phone, password, confirmPassword } =
+      this.signupForm.getRawValue();
+
+    const payload: BackendRegisterPayload = {
+      FirstName: firstName,
+      LastName: lastName,
+      Email: email,
+      PhoneNumber: phone,
+      Password: password,
+      ConfirmPassword: confirmPassword,
+    };
+
+    this.authService
+      .register(payload as unknown as RegisterRequest)
+      .pipe(
+        catchError((error: Error) => {
+          this.errorMessage = error.message;
+          console.error('Register failed:', error);
+          return throwError(() => error);
+        }),
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
+      .subscribe({
+      next: (response: RegisterResponse) => {
+        if (response.token && this.isBrowser) {
+          localStorage.setItem('token', response.token);
+          this.router.navigate(['/home']);
+          return;
+        }
+
+        this.router
+          .navigate(['/auth/login'])
+          .catch(() => this.router.navigate(['/login']));
+      },
+      error: () => {},
+    });
   }
 }

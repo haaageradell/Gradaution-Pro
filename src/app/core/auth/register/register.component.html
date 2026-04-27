@@ -37,27 +37,47 @@
         (ngSubmit)="onSubmit()"
         class="w-full flex flex-col items-center"
       >
-        <!-- Username -->
-        <div class="w-full mb-4">
-          <div class="relative">
-            <i
-              class="fa-regular fa-user absolute left-4 top-1/2 -translate-y-1/2 text-[#AAAAAA] text-sm"
-            ></i>
-            <input
-              type="text"
-              formControlName="username"
-              placeholder="Username"
-              class="w-full rounded border-0 bg-[#EEEEF8] py-3 pl-11 pr-4 text-gray-800 placeholder-[#9983A5] focus:outline-none focus:ring-2 focus:ring-[#5B21B6]/30 transition"
-            />
+        <!-- First Name & Last Name -->
+        <div class="w-full mb-4 flex gap-4">
+          <div class="w-1/2">
+            <div class="relative">
+              <i
+                class="fa-regular fa-user absolute left-4 top-1/2 -translate-y-1/2 text-[#AAAAAA] text-sm"
+              ></i>
+              <input
+                type="text"
+                formControlName="firstName"
+                placeholder="First Name"
+                class="w-full rounded border-0 bg-[#EEEEF8] py-3 pl-11 pr-4 text-gray-800 placeholder-[#9983A5] focus:outline-none focus:ring-2 focus:ring-[#5B21B6]/30 transition"
+              />
+            </div>
+            @if (
+              signupForm.get("firstName")?.invalid &&
+              signupForm.get("firstName")?.touched
+            ) {
+              <p class="text-red-500 text-sm mt-1">First name is required (min 2 characters)</p>
+            }
           </div>
-          @if (
-            signupForm.get("username")?.invalid &&
-            signupForm.get("username")?.touched
-          ) {
-            <p class="text-red-500 text-sm mt-1">
-              Username is required (min 2 characters)
-            </p>
-          }
+
+          <div class="w-1/2">
+            <div class="relative">
+              <i
+                class="fa-regular fa-user absolute left-4 top-1/2 -translate-y-1/2 text-[#AAAAAA] text-sm"
+              ></i>
+              <input
+                type="text"
+                formControlName="lastName"
+                placeholder="Last Name"
+                class="w-full rounded border-0 bg-[#EEEEF8] py-3 pl-11 pr-4 text-gray-800 placeholder-[#9983A5] focus:outline-none focus:ring-2 focus:ring-[#5B21B6]/30 transition"
+              />
+            </div>
+            @if (
+              signupForm.get("lastName")?.invalid &&
+              signupForm.get("lastName")?.touched
+            ) {
+              <p class="text-red-500 text-sm mt-1">Last name is required (min 2 characters)</p>
+            }
+          </div>
         </div>
 
         <!-- Email -->
@@ -178,6 +198,7 @@
 
         <button
           type="submit"
+          [disabled]="isLoading"
           class="w-full rounded-lg bg-[#441752] py-3 text-xl font-semibold text-white hover:bg-[#612b72] focus:outline-none focus:ring-2 focus:ring-[#5B21B6]/50 transition mb-8"
         >
           Sign Up

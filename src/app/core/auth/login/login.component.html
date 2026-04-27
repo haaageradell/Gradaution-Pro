@@ -70,7 +70,9 @@
             loginForm.get("password")?.invalid &&
             loginForm.get("password")?.touched
           ) {
-            <p class="text-red-500 text-sm mt-1">Password is required</p>
+            <p class="text-red-500 text-sm mt-1">
+              Password must be at least 8 characters and include uppercase, lowercase, number, and special character
+            </p>
           }
         </div>
 
@@ -95,7 +97,7 @@
             <span class="text-sm text-[#441752]">Remember me</span>
           </div>
           <a
-            href="#"
+            routerLink="/forgot-password"
             class="text-sm text-[#E0BBE4] hover:underline focus:outline-none"
             >Forgot Password?</a
           >
@@ -103,6 +105,7 @@
 
         <button
           type="submit"
+          [disabled]="isLoading"
           class="w-full rounded-lg bg-[#441752] py-3 text-xl font-semibold text-white hover:bg-[#612b72] focus:outline-none focus:ring-2 focus:ring-[#5B21B6]/50 transition mb-8"
         >
           Log In

@@ -1,0 +1,148 @@
+<div class="products-page pt-25">
+  <section
+    class="mx-auto w-full max-w-[1240px] px-4 pb-14 pt-5 text-[#221a30] xl:px-2"
+  >
+    <div
+      class="mb-5 flex items-center gap-2 text-[11px] font-medium text-[#a59faf]"
+    >
+      <span class="">Home</span>
+      <i class="fa-solid fa-chevron-right text-[9px]"></i>
+      <span>Category</span>
+    </div>
+
+    <header class="text-center">
+      <p class="text-[15px] font-medium text-[#c3bdcc]">Category</p>
+      <div class="mt-1 flex items-center justify-center gap-4">
+        <h1
+          class="text-[40px] font-bold leading-none tracking-[-0.02em] text-[#2b1f3b]"
+        >
+          All Glasses
+        </h1>
+        <button type="button" class="text-[12px] font-semibold text-[#5c2b7e]">
+          View
+        </button>
+        <div class="flex items-center gap-1">
+          <button
+            type="button"
+            class="inline-flex h-6 w-6 items-center justify-center rounded text-[12px]"
+            [ngClass]="
+              viewMode === 'gridA'
+                ? 'bg-[#f0ebf7] text-[#5c2b7e]'
+                : 'text-[#aea7ba]'
+            "
+            (click)="viewMode = 'gridA'"
+          >
+            <i class="fa-solid fa-table-cells-large"></i>
+          </button>
+          <button
+            type="button"
+            class="inline-flex h-6 w-6 items-center justify-center rounded text-[12px]"
+            [ngClass]="
+              viewMode === 'gridB'
+                ? 'bg-[#f0ebf7] text-[#5c2b7e]'
+                : 'text-[#aea7ba]'
+            "
+            (click)="viewMode = 'gridB'"
+          >
+            <i class="fa-solid fa-grip"></i>
+          </button>
+        </div>
+      </div>
+
+      <div
+        class="mx-auto mt-5 inline-flex items-center rounded-full bg-[#f4f2f7] p-1"
+      >
+        <button
+          *ngFor="let tab of tabs"
+          type="button"
+          (click)="onCategoryChange(tab)"
+          class="rounded-full px-4 py-1.5 text-[12px] font-semibold transition"
+          [ngClass]="
+            activeTab === tab.label
+              ? 'bg-[#4f266e] text-white shadow-[0_4px_10px_rgba(79,38,110,0.35)]'
+              : 'text-[#9e97aa]'
+          "
+        >
+          {{ tab.label }}
+        </button>
+      </div>
+    </header>
+
+    <div class="mt-11 flex items-start gap-7">
+      <div class="hidden w-[228px] shrink-0 lg:block">
+        <app-filter-sidebar></app-filter-sidebar>
+      </div>
+
+      <div class="min-w-0 flex-1">
+        <div class="mb-5 flex items-center justify-between">
+          <h2
+            class="text-[34px] font-bold leading-none tracking-[-0.02em] text-[#2a1f39]"
+          >
+            {{ activeTab }}
+            <span class="text-[12px] font-semibold text-[#8b8497]"
+              >({{ totalCount }})</span
+            >
+          </h2>
+
+          <label
+            class="flex items-center gap-2 text-[12px] font-semibold text-[#786f86]"
+          >
+            <i class="fa-solid fa-arrow-down-wide-short text-[10px]"></i>
+            <span>Brand</span>
+            <select
+              class="rounded-full border border-[#e9e4ef] bg-white px-3 py-1 text-[12px] font-medium text-[#786f86] outline-none"
+              [ngModel]="selectedBrandId"
+              (ngModelChange)="onBrandChange($event)"
+            >
+              <option [ngValue]="null">All Brands</option>
+              <option [ngValue]="1">Brand 1</option>
+              <option [ngValue]="2">Brand 2</option>
+              <option [ngValue]="3">Brand 3</option>
+            </select>
+          </label>
+        </div>
+
+        <div
+          *ngIf="isLoading"
+          class="flex min-h-[300px] items-center justify-center"
+        >
+          <div
+            class="h-10 w-10 animate-spin rounded-full border-4 border-[#e8deef] border-t-[#4f266e]"
+          ></div>
+        </div>
+
+        <div
+          *ngIf="!isLoading && errorMessage"
+          class="rounded-[12px] border border-red-200 bg-red-50 px-4 py-3 text-[13px] font-medium text-red-600"
+        >
+          {{ errorMessage }}
+        </div>
+
+        <div
+          *ngIf="!isLoading && !errorMessage && products.length === 0"
+          class="rounded-[12px] border border-[#ece8f1] bg-white px-4 py-5 text-center text-[13px] font-medium text-[#7b7487]"
+        >
+          No products found.
+        </div>
+
+        <div
+          *ngIf="!isLoading && !errorMessage && products.length > 0"
+          class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
+        >
+          <app-product-card
+            *ngFor="let product of products"
+            [product]="product"
+          ></app-product-card>
+        </div>
+
+        <div class="mt-9">
+          <app-pagination
+            [totalPages]="3"
+            [currentPage]="currentPage"
+            (pageChange)="setPage($event)"
+          ></app-pagination>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

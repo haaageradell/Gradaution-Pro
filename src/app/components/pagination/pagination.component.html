@@ -1,0 +1,35 @@
+<nav class="flex items-center justify-center gap-2" aria-label="Pagination">
+  <button
+    type="button"
+    class="inline-flex h-7 w-7 items-center justify-center rounded-full text-[12px] text-[#8e8798] transition hover:bg-[#ede8f4]"
+    [disabled]="currentPage === 1"
+    (click)="setPage(currentPage - 1)"
+    aria-label="Previous page"
+  >
+    <i class="fa-solid fa-chevron-left"></i>
+  </button>
+
+  <button
+    type="button"
+    *ngFor="let page of pages"
+    (click)="setPage(page)"
+    class="inline-flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-semibold transition"
+    [ngClass]="
+      page === currentPage
+        ? 'bg-[#4f266e] text-white shadow-[0_4px_10px_rgba(79,38,110,0.35)]'
+        : 'text-[#8e8798] hover:bg-[#ede8f4]'
+    "
+  >
+    {{ page }}
+  </button>
+
+  <button
+    type="button"
+    class="inline-flex h-7 w-7 items-center justify-center rounded-full text-[12px] text-[#8e8798] transition hover:bg-[#ede8f4]"
+    [disabled]="currentPage === totalPages"
+    (click)="setPage(currentPage + 1)"
+    aria-label="Next page"
+  >
+    <i class="fa-solid fa-chevron-right"></i>
+  </button>
+</nav>
