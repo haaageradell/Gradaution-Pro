@@ -1,0 +1,356 @@
+<div class="bg-[#f5f5f5]">
+  <div class="mx-auto w-full max-w-[1240px] px-4 pb-12 pt-28">
+    <div *ngIf="isLoading" class="py-24 text-center text-[11px] text-gray-500">
+      Loading...
+    </div>
+
+    <ng-container *ngIf="!isLoading">
+      <!-- Breadcrumb -->
+      <nav class="mb-4 text-left text-[11px] leading-tight text-gray-400">
+        <a routerLink="/home" class="text-gray-400 hover:text-gray-500">Home</a>
+        <span class="mx-1">&gt;</span>
+        <span>Products</span>
+        <span class="mx-1">&gt;</span>
+        <span>Product details</span>
+        <span class="mx-1">&gt;</span>
+        <a routerLink="/cart" class="text-gray-400 hover:text-gray-500">Cart</a>
+        <span class="mx-1">&gt;</span>
+        <span class="text-gray-500">Checkout</span>
+      </nav>
+
+      <!-- Main grid -->
+      <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-6">
+        <!-- Left ~70% -->
+        <div class="min-w-0 flex-1 lg:max-w-[calc(100%-320px)]">
+          <!-- Addresses -->
+          <div class="space-y-2.5">
+            <label
+              *ngFor="let addr of addresses"
+              class="flex cursor-pointer items-start gap-2.5 rounded border bg-white p-2.5 pr-3 shadow-none"
+              [ngClass]="
+                selectedAddressId === addr.id
+                  ? 'border-[#4B1D5A]'
+                  : 'border-gray-200'
+              "
+            >
+              <input
+                type="radio"
+                name="checkout-address"
+                class="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[#4B1D5A]"
+                [value]="addr.id"
+                [checked]="selectedAddressId === addr.id"
+                (change)="selectedAddressId = addr.id"
+              />
+              <div
+                class="min-w-0 flex-1 text-[11px] leading-snug text-gray-700"
+              >
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="font-semibold text-gray-800">{{
+                    addr.name
+                  }}</span>
+                  <span
+                    class="rounded border border-gray-300 px-1.5 py-0 text-[10px] font-medium text-gray-600"
+                    >{{ addr.badge }}</span
+                  >
+                </div>
+                <div
+                  *ngFor="let line of addr.lines"
+                  class="mt-0.5 text-gray-600"
+                >
+                  {{ line }}
+                </div>
+                <div class="mt-0.5 text-gray-600">{{ addr.phone }}</div>
+              </div>
+              <div class="flex shrink-0 gap-2 text-[#4B1D5A]">
+                <button type="button" class="p-0.5" aria-label="Edit address">
+                  <i class="fa-solid fa-pencil text-[12px]"></i>
+                </button>
+                <button type="button" class="p-0.5" aria-label="Delete address">
+                  <i class="fa-solid fa-trash-can text-[12px]"></i>
+                </button>
+              </div>
+            </label>
+          </div>
+
+          <button
+            type="button"
+            class="mt-2.5 inline-flex items-center gap-1 text-[11px] font-medium text-[#4B1D5A]"
+          >
+            <i class="fa-solid fa-plus text-[10px]"></i>
+            Add New Address
+          </button>
+
+          <!-- Payment methods -->
+          <h2 class="mb-2 mt-6 text-[13px] font-bold text-[#4B1D5A]">
+            Payment Method
+          </h2>
+
+          <div
+            *ngIf="paymentMethods.length === 0"
+            class="mb-3 text-[11px] text-gray-500"
+          >
+            No saved cards yet. Add one below.
+          </div>
+
+          <div
+            *ngIf="paymentMethods.length"
+            class="border border-gray-200 bg-white"
+          >
+            <button
+              type="button"
+              *ngFor="let pm of paymentMethods; let last = last"
+              class="flex w-full items-center gap-2.5 px-2.5 py-2 text-left text-[11px] leading-tight"
+              [class.border-b]="!last"
+              [class.border-gray-200]="!last"
+              [ngClass]="
+                selectedPaymentMethodId === pm.id
+                  ? 'border-[#4B1D5A] ring-1 ring-inset ring-[#4B1D5A]'
+                  : ''
+              "
+            >
+              <input
+                type="radio"
+                name="checkout-pm"
+                class="h-3.5 w-3.5 shrink-0 accent-[#4B1D5A]"
+                [checked]="selectedPaymentMethodId === pm.id"
+                (click)="$event.stopPropagation(); selectPayment(pm.id)"
+              />
+              <i [class]="cardBrandIconClass(pm) + ' text-[14px]'"></i>
+              <div class="min-w-0 flex-1">
+                <span class="font-medium text-gray-800">{{
+                  maskedCard(pm)
+                }}</span>
+                <span class="ml-2 text-gray-400">{{ expiryLabel(pm) }}</span>
+              </div>
+              <button
+                type="button"
+                class="shrink-0 p-1 text-[#4B1D5A]"
+                (click)="deletePaymentMethod(pm.id, $event)"
+                aria-label="Remove card"
+              >
+                <i class="fa-solid fa-trash-can text-[12px]"></i>
+              </button>
+            </button>
+          </div>
+
+          <!-- New card form -->
+          <form
+            class="mt-4 space-y-2.5"
+            [formGroup]="cardForm"
+            (ngSubmit)="submitNewCard()"
+          >
+            <div>
+              <label class="mb-0.5 block text-[11px] font-medium text-gray-700"
+                >Your Name</label
+              >
+              <input
+                type="text"
+                formControlName="holderName"
+                placeholder="Name on card"
+                class="h-8 w-full rounded border border-gray-300 bg-white px-2 text-[11px] placeholder:text-gray-400"
+              />
+            </div>
+            <div>
+              <label class="mb-0.5 block text-[11px] font-medium text-gray-700"
+                >Card Number</label
+              >
+              <input
+                type="text"
+                formControlName="cardNumber"
+                placeholder="0000 0000 0000 0000"
+                class="h-8 w-full rounded border border-gray-300 bg-white px-2 text-[11px] placeholder:text-gray-400"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label
+                  class="mb-0.5 block text-[11px] font-medium text-gray-700"
+                  >Expire Date</label
+                >
+                <input
+                  type="text"
+                  formControlName="expireDate"
+                  placeholder="MM/YY"
+                  class="h-8 w-full rounded border border-gray-300 bg-white px-2 text-[11px] placeholder:text-gray-400"
+                />
+              </div>
+              <div>
+                <label
+                  class="mb-0.5 flex items-center gap-1 text-[11px] font-medium text-gray-700"
+                >
+                  CVV
+                  <i
+                    class="fa-regular fa-circle-question text-[10px] text-gray-400"
+                    title="3 digits on back of card"
+                  ></i>
+                </label>
+                <input
+                  type="password"
+                  formControlName="cvv"
+                  placeholder="CVV"
+                  class="h-8 w-full rounded border border-gray-300 bg-white px-2 text-[11px] placeholder:text-gray-400"
+                />
+              </div>
+            </div>
+            <label class="flex cursor-pointer items-center gap-2 pt-0.5">
+              <input
+                type="checkbox"
+                formControlName="saveCard"
+                class="h-3.5 w-3.5 shrink-0 rounded border-gray-300 accent-[#4B1D5A]"
+              />
+              <span class="text-[11px] text-gray-500"
+                >Save this card for a faster checkout experience</span
+              >
+            </label>
+          </form>
+        </div>
+
+        <!-- Right summary ~30% -->
+        <aside class="w-full shrink-0 lg:w-[300px]">
+          <div
+            class="rounded border border-[#4B1D5A] bg-white p-3.5 text-[11px] text-gray-700"
+          >
+            <h2 class="mb-2.5 text-[13px] font-bold text-[#4B1D5A]">
+              Order Summary
+            </h2>
+
+            <div class="flex justify-between py-0.5">
+              <span>Price</span>
+              <span>{{ formatMoneyInt(summary.subtotal) }}</span>
+            </div>
+            <div class="flex justify-between py-0.5">
+              <span>Discount</span>
+              <span>{{ formatMoneyInt(summary.discount) }}</span>
+            </div>
+            <div class="flex justify-between py-0.5">
+              <span>Shipping</span>
+              <span>{{ shippingLabel() }}</span>
+            </div>
+            <div class="flex justify-between py-0.5">
+              <span>Coupon Applied</span>
+              <span>{{ formatMoney(summary.couponDiscount) }}</span>
+            </div>
+
+            <div class="my-2.5 border-t border-gray-200"></div>
+
+            <div
+              class="flex justify-between text-[12px] font-bold text-gray-900"
+            >
+              <span>TOTAL</span>
+              <span>{{ formatMoneyInt(summary.total) }}</span>
+            </div>
+
+            <p class="mt-2.5 text-[11px] text-gray-600">
+              Estimated Delivery by
+              <span class="font-bold text-gray-800">{{
+                estimatedDeliveryLabel
+              }}</span>
+            </p>
+
+            <div class="mt-2.5 flex gap-1.5">
+              <input
+                type="text"
+                [(ngModel)]="couponCodeInput"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="Coupon"
+                class="h-7 min-w-0 flex-1 rounded border border-gray-300 px-2 text-[11px] placeholder:text-gray-400"
+              />
+              <button
+                type="button"
+                (click)="applyCoupon()"
+                [disabled]="isApplyingCoupon"
+                class="shrink-0 rounded bg-[#4B1D5A] px-3 py-1 text-[11px] font-semibold text-white disabled:opacity-50"
+              >
+                Apply
+              </button>
+            </div>
+
+            <button
+              type="button"
+              (click)="placeOrder()"
+              [disabled]="isPlacingOrder"
+              class="mt-3 w-full rounded-lg bg-[#4B1D5A] py-2.5 text-[12px] font-semibold text-white disabled:opacity-50"
+            >
+              {{ isPlacingOrder ? "Placing…" : "Place order" }}
+            </button>
+          </div>
+        </aside>
+      </div>
+      <!-- 
+      Similar products
+      <section class="mt-8">
+        <h2 class="mb-3 text-left text-[13px] font-bold text-[#4B1D5A]">
+          Similar products
+        </h2>
+        <div class="grid grid-cols-4 gap-3">
+          <article
+            *ngFor="let p of similarProducts"
+            class="relative flex flex-col overflow-hidden rounded border border-gray-200 bg-white"
+          >
+            <div
+              class="relative flex h-[120px] items-center justify-center bg-[#e8e8e8]"
+            >
+              <img
+                *ngIf="p.image"
+                [src]="p.image"
+                [alt]="p.name"
+                class="max-h-[90px] max-w-full object-contain"
+              />
+              <button
+                type="button"
+                (click)="toggleWishlist(p.id, $event)"
+                class="absolute right-2 top-2 text-[13px] text-gray-600"
+                aria-label="Wishlist"
+              >
+                <i
+                  class="fa-heart"
+                  [ngClass]="isWished(p.id) ? 'fa-solid' : 'fa-regular'"
+                ></i>
+              </button>
+              <button
+                type="button"
+                class="absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded border border-[#4B1D5A] bg-white px-2 py-0.5 text-[9px] font-semibold text-[#4B1D5A]"
+              >
+                Try Them On
+              </button>
+            </div>
+            <div class="flex flex-1 flex-col px-2 pb-2 pt-1.5">
+              <h3
+                class="line-clamp-2 text-[10px] font-semibold leading-tight text-gray-800"
+              >
+                {{ p.name }}
+              </h3>
+              <div class="mt-1 flex items-center gap-0.5 text-[#f3b447]">
+                <i
+                  *ngFor="let s of [1, 2, 3, 4, 5]"
+                  class="fa-star text-[8px]"
+                  [ngClass]="
+                    starFilled(s, p.rating) ? 'fa-solid' : 'fa-regular'
+                  "
+                ></i>
+              </div>
+              <div class="mt-auto flex items-end justify-between pt-1">
+                <div class="flex items-baseline gap-1">
+                  <span class="text-[11px] font-bold text-[#4B1D5A]"
+                    >{{ p.price }} EGP</span
+                  >
+                  <span class="text-[9px] text-gray-400 line-through"
+                    >{{ p.oldPrice }} EGP</span
+                  >
+                </div>
+                <button
+                  type="button"
+                  (click)="addSimilarToCart(p, $event)"
+                  class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#4B1D5A] text-[11px] text-white"
+                  aria-label="Add to cart"
+                >
+                  <i class="fa-solid fa-plus"></i>
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section> -->
+    </ng-container>
+  </div>
+</div>
