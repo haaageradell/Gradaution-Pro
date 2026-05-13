@@ -14,12 +14,7 @@ import { VisionTestComponent } from './features/vision-test/vision-test.componen
 import { NotFoundComponent } from './features/not-found/not-found.component';
 import { ProductsComponent } from './pages/products/products.component';
 import { CartPageComponent } from './features/cart/pages/cart-page.component';
-<<<<<<< HEAD
 import { CheckoutPageComponent } from './features/checkout/pages/checkout-page.component';
-=======
-import { CheckoutComponent } from './features/cart/pages/checkout.component';
->>>>>>> 905b30e6a8ccd2984b861c9225c4c94d639fe078
-
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
 
@@ -80,13 +75,8 @@ export const routes: Routes = [
       },
       {
         path: 'checkout',
-<<<<<<< HEAD
         component: CheckoutPageComponent,
-        title: 'Checkout',
-=======
-        component: CheckoutComponent,
         title: 'Checkout Page',
->>>>>>> 905b30e6a8ccd2984b861c9225c4c94d639fe078
       },
     ],
   },

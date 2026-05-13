@@ -15,7 +15,6 @@ import {
   CartViewModel,
 } from '../../../core/models/cart.models';
 import type { OrderListItem } from '../../../core/models/order-api.models';
-import type { PaymentMethodView } from '../../../core/models/payment-method.models';
 import { CartService } from '../../../core/services/cart.service';
 import { OrderService } from '../../../core/services/order.service';
 import { PaymentMethodService } from '../../../core/services/payment-method.service';
@@ -23,6 +22,7 @@ import { ProductService } from '../../../core/services/product.service';
 import { Product } from '../../../core/models/product.model';
 import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
+import { PaymentMethodView } from '../../../core/models/payment-method.models';
 interface CheckoutAddress {
   id: string;
   name: string;
@@ -186,6 +186,7 @@ export class CheckoutPageComponent implements OnInit {
       this.cardForm.markAllAsTouched();
       return;
     }
+
     const { holderName, cardNumber, expireDate, cvv, saveCard } =
       this.cardForm.getRawValue();
     const parsed = this.parseExpiry(expireDate ?? '');
@@ -216,7 +217,7 @@ export class CheckoutPageComponent implements OnInit {
         }),
       )
       .subscribe({
-        next: (list) => {
+        next: (list: PaymentMethodView[]) => {
           this.paymentMethods = list;
           if (list.length) {
             this.selectedPaymentMethodId = list[list.length - 1]!.id;
