@@ -1,5 +1,4 @@
-import { Component, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { Component } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -48,25 +47,30 @@ export class RegisterComponent {
   errorMessage = '';
   isLoading = false;
 
-  private readonly isBrowser: boolean;
-
   constructor(
     private readonly fb: FormBuilder,
     private readonly authService: AuthService,
     private readonly router: Router,
-    @Inject(PLATFORM_ID) private readonly platformId: object
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
     this.signupForm = this.fb.nonNullable.group(
       {
         firstName: ['', [Validators.required, Validators.minLength(2)]],
         lastName: ['', [Validators.required, Validators.minLength(2)]],
         email: ['', [Validators.required, Validators.email]],
-        phone: ['', [Validators.required, Validators.pattern(/^[\d\s\-\+\(\)]{10,}$/)]],
-        password: ['', [Validators.required, Validators.pattern(PASSWORD_COMPLEXITY_PATTERN)]],
+        phone: [
+          '',
+          [Validators.required, Validators.pattern(/^[\d\s\-\+\(\)]{10,}$/)],
+        ],
+        password: [
+          '',
+          [
+            Validators.required,
+            Validators.pattern(PASSWORD_COMPLEXITY_PATTERN),
+          ],
+        ],
         confirmPassword: ['', Validators.required],
       },
-      { validators: passwordMatchValidator() }
+      { validators: passwordMatchValidator() },
     );
   }
 
@@ -110,21 +114,20 @@ export class RegisterComponent {
         }),
         finalize(() => {
           this.isLoading = false;
-        })
+        }),
       )
       .subscribe({
-      next: (response: RegisterResponse) => {
-        if (response.token && this.isBrowser) {
-          localStorage.setItem('token', response.token);
-          this.router.navigate(['/home']);
-          return;
-        }
-
-        this.router
-          .navigate(['/auth/login'])
-          .catch(() => this.router.navigate(['/login']));
-      },
-      error: () => {},
-    });
+        next: (response: RegisterResponse) => {
+          // console.log('REGISTER RESPONSE', response);
+          const savedToken = this.authService.persistAuthToken(response);
+          // console.log('TOKEN SAVED', savedToken ?? '(none)');
+          if (savedToken) {
+            this.router.navigate(['/home']);
+            return;
+          }
+          this.router.navigate(['/login']);
+        },
+        error: () => {},
+      });
   }
 }

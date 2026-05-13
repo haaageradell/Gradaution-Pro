@@ -17,6 +17,7 @@ import { CartPageComponent } from './features/cart/pages/cart-page.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
+
   {
     path: '',
     component: AuthLayoutComponent,

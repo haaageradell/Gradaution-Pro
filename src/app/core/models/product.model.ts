@@ -23,3 +23,16 @@ export interface ProductsApiResponse {
   data?: Product[];
   totalCount?: number;
 }
+export interface SharedProductCardItem {
+  id: number;
+
+  name: string;
+
+  image: string;
+
+  price: number;
+
+  oldPrice?: number;
+
+  rating?: number;
+}

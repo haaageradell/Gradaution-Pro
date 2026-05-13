@@ -90,8 +90,8 @@ export class ProductsComponent implements OnInit {
     request$.subscribe({
       next: (response) => {
         const productsArray = this.extractProducts(response);
-        console.log('Products:', productsArray);
-        console.log('First Product:', productsArray[0] ?? null);
+        // console.log('Products:', productsArray);
+        // console.log('First Product:', productsArray[0] ?? null);
 
         this.products = productsArray.map((product) =>
           this.mapProductToCardItem(product),
@@ -99,7 +99,7 @@ export class ProductsComponent implements OnInit {
 
         this.totalCount = Array.isArray(response)
           ? this.products.length
-          : response.totalCount ?? this.products.length;
+          : (response.totalCount ?? this.products.length);
 
         this.isLoading = false;
       },
@@ -115,7 +115,7 @@ export class ProductsComponent implements OnInit {
   private mapProductToCardItem(product: Product): ProductItem {
     const price = product?.price ?? 0;
     const oldPrice = product?.oldPrice ?? price;
-    const rating = product?.rating ?? product?.averageRating ?? 0;
+    const rating = product?.rating ?? product?.averageRating ?? 2.5;
     const image =
       product.imageUrl?.trim() ||
       product.thumbnailUrl?.trim() ||

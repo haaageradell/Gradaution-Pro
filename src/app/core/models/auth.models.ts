@@ -9,6 +9,9 @@ export interface RegisterRequest {
 export interface RegisterResponse {
   message?: string;
   token?: string;
+  Token?: string;
+  accessToken?: string;
+  AccessToken?: string;
   errors?: string[];
   [key: string]: unknown;
 }
@@ -20,8 +23,14 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   message?: string;
+  /** camelCase (.NET default JSON naming) */
   token?: string;
+  /** PascalCase (some ASP.NET serializers) */
+  Token?: string;
+  accessToken?: string;
+  AccessToken?: string;
   refreshToken?: string;
+  RefreshToken?: string;
   expiresIn?: number;
   errors?: string[];
   [key: string]: unknown;

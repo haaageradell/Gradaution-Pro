@@ -2,18 +2,19 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, Inject, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { catchError, finalize, of, switchMap } from 'rxjs';
+import { catchError, EMPTY, finalize, switchMap } from 'rxjs';
 import {
-  Order,
-  OrderItem,
-  PriceSummary,
-} from '../../../core/models/order.interface';
-import { OrderService } from '../../../core/services/order.service';
+  CartCoupon,
+  CartLineItem,
+  CartPriceSummary,
+} from '../../../core/models/cart.models';
+import { CartService } from '../../../core/services/cart.service';
 import { CartItemComponent } from '../components/cart-item.component';
 import { OrderSummaryComponent } from '../components/order-summary.component';
 import { SimilarProductsComponent } from '../../products/components/similar-products.component';
 import { SharedProductCardItem } from '../../../shared/components/product-card.component';
-
+import { ProductService } from '../../../core/services/product.service';
+import { ToastrService } from 'ngx-toastr';
 @Component({
   selector: 'app-cart-page',
   standalone: true,
@@ -27,18 +28,19 @@ import { SharedProductCardItem } from '../../../shared/components/product-card.c
   styleUrl: './cart-page.component.css',
 })
 export class CartPageComponent implements OnInit {
-  private readonly orderService = inject(OrderService);
+  private readonly cartService = inject(CartService);
   private readonly router = inject(Router);
   private readonly isBrowser: boolean;
+  private readonly productService = inject(ProductService);
+  private readonly toastr = inject(ToastrService);
 
   constructor(@Inject(PLATFORM_ID) private readonly platformId: object) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
-
-  order: Order | null = null;
-  orderId = '';
-  cartItems: OrderItem[] = [];
-  summary: PriceSummary = {
+  coupon: CartCoupon | null = null;
+  estimatedDelivery = '3-5 Business Days';
+  cartItems: CartLineItem[] = [];
+  summary: CartPriceSummary = {
     subtotal: 0,
     discount: 0,
     shipping: 0,
@@ -52,112 +54,185 @@ export class CartPageComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.isBrowser) {
-      console.log('[CartPage] init token:', localStorage.getItem('token'));
+      // console.log('[CartPage] init token:', localStorage.getItem('token'));
+
+      this.getCart();
     } else {
       console.log('[CartPage] init on server');
     }
-    this.loadCurrentOrder();
   }
+
+  //
+  private loadSimilarProducts(): void {
+    this.productService.getAllProducts().subscribe({
+      next: (response) => {
+        const products = Array.isArray(response)
+          ? response
+          : (response.data ?? []);
+
+        this.similarProducts = products
+
+          // استبعاد المنتجات الموجودة في الكارت
+          .filter(
+            (product) =>
+              !this.cartItems.some(
+                (cartItem) => cartItem.productId === product.id,
+              ),
+          )
+
+          // عدد المنتجات
+          .slice(0, 6)
+
+          // تحويل الشكل للكارد
+          .map((product) => ({
+            id: product.id,
+
+            name: product.name,
+
+            image:
+              product.thumbnailUrl && product.thumbnailUrl.trim() !== ''
+                ? product.thumbnailUrl
+                : 'https://picsum.photos/300/300',
+
+            price: product.price,
+
+            oldPrice: product.price + 500,
+
+            rating: product.averageRating || 0,
+          }));
+
+        // console.log('SIMILAR PRODUCTS:', this.similarProducts);
+      },
+
+      error: (error) => {
+        console.error('Failed to load similar products', error);
+      },
+    });
+  }
+  //
 
   onQuantityChange(itemId: string, change: number): void {
     const target = this.cartItems.find((item) => item.id === itemId);
     if (!target) {
       return;
     }
-    target.quantity = Math.max(1, target.quantity + change);
-    this.recalculateSummary();
-  }
-
-  removeItem(itemId: string): void {
-    this.cartItems = this.cartItems.filter((item) => item.id !== itemId);
-    this.recalculateSummary();
-  }
-
-  applyCoupon(code: string): void {
-    if (!this.orderId) {
+    const newQty = Math.max(1, target.quantity + change);
+    this.cartService.updateCartCountFromItems(this.cartItems);
+    if (newQty === target.quantity) {
       return;
     }
+    this.cartService
+      .updateCartItem(itemId, { quantity: newQty })
+      .pipe(
+        switchMap(() =>
+          this.cartService.getCart().pipe(
+            catchError((err: HttpErrorResponse) => {
+              console.error('[CartPage] getCart after update error:', err);
+              return EMPTY;
+            }),
+          ),
+        ),
+        catchError((error: HttpErrorResponse) => {
+          console.error('[CartPage] updateCartItem error:', error);
+          return EMPTY;
+        }),
+      )
+      .subscribe({
+        next: (cart) => {
+          this.toastr.success(
+            `${target.productName} quantity updated`,
+            'Cart Updated',
+            {
+              positionClass: 'toast-bottom-right',
+            },
+          );
+          console.log('[CartPage] cart after quantity update:', cart);
+          this.applyCartView(cart);
+        },
+      });
+  }
+  removeItem(itemId: string): void {
+    const removedItem = this.cartItems.find((item) => item.id === itemId);
 
-    this.orderService.applyCoupon(this.orderId, code).subscribe({
-      next: (updatedOrder) => {
-        console.log('[CartPage] applyCoupon response:', updatedOrder);
-        this.order = updatedOrder;
-        this.syncOrderState(updatedOrder);
-      },
-      error: (error: HttpErrorResponse) => {
-        console.error('[CartPage] applyCoupon error:', error);
-        this.couponMessage = 'Coupon is not valid.';
-      },
-    });
+    this.cartService
+      .removeCartItem(itemId)
+
+      .pipe(switchMap(() => this.cartService.getCart()))
+
+      .subscribe({
+        next: (cart) => {
+          this.applyCartView(cart);
+
+          this.toastr.warning(
+            `${removedItem?.productName} removed from cart`,
+            'Removed',
+            {
+              positionClass: 'toast-bottom-right',
+            },
+          );
+        },
+      });
+  }
+  applyCoupon(code: string): void {
+    console.log(
+      '[CartPage] applyCoupon (no dedicated Cart coupon route in spec):',
+      code,
+    );
+    this.couponMessage =
+      'Promotional codes are applied at checkout when your backend supports them.';
   }
 
   proceedToCheckout(): void {
     this.router.navigateByUrl('/checkout');
   }
 
-  private loadCurrentOrder(): void {
+  private getCart(): void {
     this.isLoading = true;
-    this.orderService
-      .getCurrentOrder()
+    this.cartService
+      .getCart()
       .pipe(
-        switchMap((order) => {
-          console.log('[CartPage] getCurrentOrder response:', order);
-          if (!order || !order.id) {
-            return this.createOrderAndReload();
-          }
-          return of(order);
-        }),
         catchError((error: HttpErrorResponse) => {
-          console.error('[CartPage] getCurrentOrder error:', error);
-          if (error.status === 404) {
-            return this.createOrderAndReload();
-          }
+          console.error('[CartPage] getCart error:', error);
           this.resetCartState();
-          return of(null);
+          return EMPTY;
         }),
         finalize(() => {
           this.isLoading = false;
         }),
       )
-      .subscribe((order) => {
-        if (!order) {
-          return;
-        }
-        this.order = order;
-        this.syncOrderState(order);
+      .subscribe({
+        next: (cart) => {
+          // console.log('[CartPage] getCart response:', cart);
+          this.applyCartView(cart);
+        },
       });
   }
 
-  private syncOrderState(order: Order): void {
-    console.log('[CartPage] sync order state:', order);
-    this.orderId = order.id ? String(order.id) : '';
-    this.cartItems = [...order.items];
-    this.summary = { ...order.summary };
-    this.couponMessage = order.coupon?.isApplied
-      ? `Coupon "${order.coupon.code}" applied successfully.`
+  private applyCartView(cart: {
+    items: CartLineItem[];
+    summary: CartPriceSummary;
+    coupon: CartCoupon | null;
+    estimatedDelivery?: string;
+  }): void {
+    this.cartItems = [...cart.items];
+    this.cartService.updateCartCountFromItems(this.cartItems);
+    this.summary = { ...cart.summary };
+
+    this.coupon = cart.coupon;
+
+    this.estimatedDelivery = cart.estimatedDelivery ?? '3-5 Business Days';
+
+    this.couponMessage = this.coupon?.isApplied
+      ? `Coupon "${this.coupon.code}" applied successfully.`
       : '';
-    this.mapSimilarProducts(order.items);
+
+    this.loadSimilarProducts();
+
     this.recalculateSummary();
   }
 
-  private createOrderAndReload() {
-    console.log('[CartPage] creating order because none exists');
-    return this.orderService.createOrder().pipe(
-      switchMap((createdOrder) => {
-        console.log('[CartPage] createOrder response:', createdOrder);
-        return this.orderService.getCurrentOrder();
-      }),
-      catchError((error: HttpErrorResponse) => {
-        console.error('[CartPage] createOrder error:', error);
-        this.resetCartState();
-        return of(null);
-      }),
-    );
-  }
-
   private resetCartState(): void {
-    this.order = null;
-    this.orderId = '';
+    this.coupon = null;
     this.cartItems = [];
     this.similarProducts = [];
     this.summary = {
@@ -167,15 +242,6 @@ export class CartPageComponent implements OnInit {
       couponDiscount: 0,
       total: 0,
     };
-  }
-
-  private mapSimilarProducts(items: OrderItem[]): void {
-    this.similarProducts = items.map((item) => ({
-      id: item.productId,
-      name: item.productName,
-      image: item.productImage,
-      price: item.unitPrice,
-    }));
   }
 
   private recalculateSummary(): void {

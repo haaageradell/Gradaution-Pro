@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { OrderItem } from '../../../core/models/order.interface';
+import { CartLineItem } from '../../../core/models/cart.models';
 
 @Component({
   selector: 'app-cart-item',
@@ -56,7 +56,7 @@ import { OrderItem } from '../../../core/models/order.interface';
   `,
 })
 export class CartItemComponent {
-  @Input({ required: true }) item!: OrderItem;
+  @Input({ required: true }) item!: CartLineItem;
   @Output() quantityChanged = new EventEmitter<number>();
   @Output() removed = new EventEmitter<void>();
 }

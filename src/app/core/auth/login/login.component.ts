@@ -1,6 +1,11 @@
-import { Component, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, Inject, PLATFORM_ID } from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { LoginRequest } from '../../models/auth.models';
@@ -22,18 +27,18 @@ export class LoginComponent {
   errorMessage = '';
   isLoading = false;
 
-  private readonly isBrowser: boolean;
-
   constructor(
     private readonly fb: FormBuilder,
     private readonly authService: AuthService,
     private readonly router: Router,
-    @Inject(PLATFORM_ID) private readonly platformId: object
+    @Inject(PLATFORM_ID) private readonly platformId: object,
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
     this.loginForm = this.fb.nonNullable.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.pattern(PASSWORD_COMPLEXITY_PATTERN)]],
+      password: [
+        '',
+        [Validators.required, Validators.pattern(PASSWORD_COMPLEXITY_PATTERN)],
+      ],
     });
   }
 
@@ -63,18 +68,24 @@ export class LoginComponent {
         }),
         finalize(() => {
           this.isLoading = false;
-        })
+        }),
       )
       .subscribe({
-      next: (response) => {
-        console.log('Login response:', response);
-        if (response.token && this.isBrowser) {
-          localStorage.setItem('token', response.token);
-          console.log('Stored token:', localStorage.getItem('token'));
-        }
-        this.router.navigate(['/home']);
-      },
-      error: () => {},
-    });
+        next: (response) => {
+          // console.log('LOGIN RESPONSE:', response);
+          const token = this.authService.extractJwtFromAuthResponse(response);
+          if (isPlatformBrowser(this.platformId) && token) {
+            localStorage.setItem('token', token);
+          }
+          // console.log('TOKEN SAVED:', token);
+          if (!token) {
+            this.errorMessage =
+              'Login succeeded but the server did not return a token. Please try again or contact support.';
+            return;
+          }
+          this.router.navigate(['/home']);
+        },
+        error: () => {},
+      });
   }
 }

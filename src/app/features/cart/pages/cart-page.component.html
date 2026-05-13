@@ -37,8 +37,8 @@
         <div>
           <app-order-summary
             [summary]="summary"
-            [coupon]="order?.coupon ?? null"
-            [estimatedDelivery]="order?.estimatedDelivery ?? '3-5 Business Days'"
+            [coupon]="coupon"
+            [estimatedDelivery]="estimatedDelivery"
             (couponApplied)="applyCoupon($event)"
             (proceed)="proceedToCheckout()"
           ></app-order-summary>
