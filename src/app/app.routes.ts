@@ -14,6 +14,7 @@ import { VisionTestComponent } from './features/vision-test/vision-test.componen
 import { NotFoundComponent } from './features/not-found/not-found.component';
 import { ProductsComponent } from './pages/products/products.component';
 import { CartPageComponent } from './features/cart/pages/cart-page.component';
+import { CheckoutComponent } from './features/cart/pages/checkout.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -72,6 +73,11 @@ export const routes: Routes = [
         path: 'cart',
         component: CartPageComponent,
         title: 'Cart Page',
+      },
+      {
+        path: 'checkout',
+        component: CheckoutComponent,
+        title: 'Checkout Page',
       },
     ],
   },

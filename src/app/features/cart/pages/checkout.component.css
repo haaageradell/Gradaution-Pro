@@ -1,0 +1,47 @@
+/* Checkout Component Styles */
+
+:host {
+  display: block;
+}
+
+/* Smooth transitions */
+input[type="radio"],
+input[type="checkbox"] {
+  cursor: pointer;
+}
+
+/* Button hover states */
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Form input focus */
+input:focus {
+  box-shadow: 0 0 0 1px #4B1D5A;
+}
+
+/* Address card animation */
+.border {
+  transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+/* Breadcrumb styling */
+nav span {
+  letter-spacing: 0.25px;
+}
+
+/* Badge styling */
+.inline-block {
+  display: inline-block;
+}
+
+/* Sticky order summary positioning */
+@media (max-width: 1200px) {
+  .sticky {
+    position: static;
+  }
+}
