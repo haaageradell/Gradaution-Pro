@@ -1,0 +1,169 @@
+.home-category-card {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+.home-category-card:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
+}
+
+@keyframes home-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes home-hero-ken {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes home-face-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.home-hero-copy > * {
+  animation: home-fade-up 0.85s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.home-hero-copy > *:nth-child(1) {
+  animation-delay: 0.04s;
+}
+
+.home-hero-copy > *:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.home-hero-copy > *:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-hero-img {
+    animation: home-hero-ken 22s ease-in-out infinite alternate;
+  }
+
+  .home-face-frame {
+    animation: home-face-float 7s ease-in-out infinite;
+  }
+}
+
+@keyframes home-benefit-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes home-benefit-icon {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  25% {
+    transform: translateY(-3px) rotate(-4deg);
+  }
+
+  75% {
+    transform: translateY(-3px) rotate(4deg);
+  }
+}
+
+.home-benefit-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  animation: home-benefit-in 0.65s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.home-benefit-card:nth-child(1) {
+  animation-delay: 0.06s;
+}
+
+.home-benefit-card:nth-child(2) {
+  animation-delay: 0.14s;
+}
+
+.home-benefit-card:nth-child(3) {
+  animation-delay: 0.22s;
+}
+
+.home-benefit-card::after {
+  content: "";
+  position: absolute;
+  inset: -40% -60%;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%) rotate(6deg);
+  transition: transform 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.home-benefit-card:hover::after {
+  transform: translateX(120%) rotate(6deg);
+}
+
+.home-benefit-card:hover .home-benefit-icon-wrap i {
+  animation: home-benefit-icon 1.15s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-copy > * {
+    animation: none;
+  }
+
+  .home-hero-img {
+    animation: none;
+  }
+
+  .home-face-frame {
+    animation: none;
+  }
+
+  .home-benefit-card {
+    animation: none;
+  }
+
+  .home-benefit-card::after {
+    transition: none;
+    transform: none;
+    opacity: 0;
+  }
+
+  .home-benefit-card:hover::after {
+    transform: none;
+  }
+
+  .home-benefit-card:hover .home-benefit-icon-wrap i {
+    animation: none;
+  }
+}

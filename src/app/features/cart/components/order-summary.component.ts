@@ -14,19 +14,31 @@ import { CouponInputComponent } from './coupon-input.component';
       <div class="mt-5 space-y-3 text-sm">
         <div class="flex items-center justify-between text-[#6F6483]">
           <span>Price</span>
-          <span class="font-semibold text-[#2D2340]">{{ summary.subtotal | currency: 'EGP ' : 'symbol' : '1.0-0' }}</span>
+          <span class="font-semibold text-[#2D2340]">{{
+            summary.subtotal | currency: 'EGP ' : 'symbol' : '1.0-0'
+          }}</span>
         </div>
         <div class="flex items-center justify-between text-[#6F6483]">
           <span>Discount</span>
-          <span class="font-semibold text-[#2D2340]">-{{ summary.discount | currency: 'EGP ' : 'symbol' : '1.0-0' }}</span>
+          <span class="font-semibold text-[#2D2340]"
+            >-{{
+              summary.discount | currency: 'EGP ' : 'symbol' : '1.0-0'
+            }}</span
+          >
         </div>
         <div class="flex items-center justify-between text-[#6F6483]">
           <span>Shipping</span>
-          <span class="font-semibold text-[#2D2340]">{{ summary.shipping | currency: 'EGP ' : 'symbol' : '1.0-0' }}</span>
+          <span class="font-semibold text-[#2D2340]">{{
+            summary.shipping | currency: 'EGP ' : 'symbol' : '1.0-0'
+          }}</span>
         </div>
         <div class="flex items-center justify-between text-[#6F6483]">
           <span>Coupon Applied</span>
-          <span class="font-semibold text-[#2D2340]">-{{ summary.couponDiscount | currency: 'EGP ' : 'symbol' : '1.0-0' }}</span>
+          <span class="font-semibold text-[#2D2340]"
+            >-{{
+              summary.couponDiscount | currency: 'EGP ' : 'symbol' : '1.0-0'
+            }}</span
+          >
         </div>
       </div>
 
@@ -34,19 +46,28 @@ import { CouponInputComponent } from './coupon-input.component';
 
       <div class="flex items-center justify-between">
         <span class="text-base font-semibold text-[#2D2340]">TOTAL</span>
-        <span class="text-2xl font-bold text-[#2D2340]">{{ summary.total | currency: 'EGP ' : 'symbol' : '1.0-0' }}</span>
+        <span class="text-2xl font-bold text-[#2D2340]">{{
+          summary.total | currency: 'EGP ' : 'symbol' : '1.0-0'
+        }}</span>
       </div>
 
       <p class="mt-2 text-xs text-[#877C99]">
         Estimated Delivery:
-        <span class="font-semibold text-[#2D2340]">{{ estimatedDelivery }}</span>
+        <span class="font-semibold text-[#2D2340]">{{
+          estimatedDelivery
+        }}</span>
       </p>
 
       <div class="mt-5">
-        <app-coupon-input (couponApplied)="couponApplied.emit($event)"></app-coupon-input>
+        <app-coupon-input
+          (couponApplied)="couponApplied.emit($event)"
+        ></app-coupon-input>
       </div>
 
-      <p *ngIf="coupon?.isApplied" class="mt-3 text-xs font-semibold text-[#3B9B56]">
+      <p
+        *ngIf="coupon?.isApplied"
+        class="mt-3 text-xs font-semibold text-[#3B9B56]"
+      >
         Coupon "{{ coupon?.code }}" applied successfully.
       </p>
 

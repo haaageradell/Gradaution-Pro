@@ -1,1 +1,192 @@
-<p>vision-test works!</p>
+<div class="vision-page min-h-[calc(100vh-88px)] bg-[#f6f5f8] pb-16 pt-6">
+  <header
+    class="mx-auto mb-10 flex max-w-5xl flex-wrap items-center justify-between gap-4 border-b border-[#e8e4ef] px-6 pb-5"
+  >
+    <a routerLink="/home" class="text-lg font-semibold tracking-tight text-[#2a173d]">
+      OPTIVIO
+    </a>
+    <p
+      class="order-3 w-full text-center text-xs font-medium uppercase tracking-[0.28em] text-[#7a7089] sm:order-0 sm:w-auto"
+    >
+      Health · Meets · Technology
+    </p>
+    <a
+      routerLink="/home"
+      class="text-sm font-medium text-[#441752] underline-offset-4 transition-colors hover:text-[#361445] hover:underline"
+    >
+      Home
+    </a>
+  </header>
+
+  <main class="mx-auto max-w-3xl px-6">
+    @if (phase() === 'prepLeft') {
+      <div class="vision-card rounded-3xl bg-white p-10 text-center">
+        <div
+          class="mx-auto mb-6 flex h-20 w-28 items-center justify-center text-[#441752]"
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 120 80" class="h-full w-full">
+            <ellipse cx="40" cy="40" rx="22" ry="28" fill="none" stroke="currentColor" stroke-width="3" />
+            <ellipse cx="80" cy="40" rx="22" ry="28" fill="none" stroke="currentColor" stroke-width="3" opacity="0.35" />
+          </svg>
+        </div>
+        <h1 class="text-2xl font-semibold text-[#1a1520] md:text-3xl">Eyes ready?</h1>
+        <p class="mt-3 text-lg text-[#5c5668]">
+          Cover your <span class="font-semibold text-[#2a173d]">left</span> eye with your hand. We will check your
+          <span class="font-semibold text-[#441752]">right</span> eye first.
+        </p>
+        <button type="button" class="vision-btn-primary mt-10" (click)="goPrepLeftNext()">Next</button>
+      </div>
+    }
+
+    @if (phase() === 'instruct1') {
+      <div class="vision-card rounded-3xl bg-white p-10 text-center">
+        <div class="mx-auto mb-8 max-w-xs">
+          <svg viewBox="-50 -50 100 100" class="mx-auto h-24 w-24 text-[#2a173d]" aria-hidden="true">
+            @for (i of segmentIndices; track i) {
+              @if (i !== 2) {
+                <path [attr.d]="wedgePath(i, 22, 36)" fill="currentColor" opacity="0.9" />
+              }
+            }
+          </svg>
+          <p class="mt-2 text-xs text-[#7a7089]">Example: gap opens to the right</p>
+        </div>
+        <h2 class="text-xl font-semibold text-[#1a1520] md:text-2xl">Mark the matching gap</h2>
+        <ol class="mx-auto mt-6 max-w-md space-y-3 text-left text-sm leading-relaxed text-[#5c5668]">
+          <li class="flex gap-2">
+            <span class="font-semibold text-[#441752]">1.</span>
+            Keep your left eye covered and hold the screen at a comfortable arm’s length.
+          </li>
+          <li class="flex gap-2">
+            <span class="font-semibold text-[#441752]">2.</span>
+            Look at the <strong>small</strong> ring: notice where the opening (gap) points.
+          </li>
+          <li class="flex gap-2">
+            <span class="font-semibold shrink-0 text-[#441752]">3.</span>
+            <span>Tap the <strong>same direction</strong> on the large ring below — four rounds for this eye.</span>
+          </li>
+        </ol>
+        <button type="button" class="vision-btn-primary mt-10" (click)="goInstruct1Ready()">I’m ready</button>
+      </div>
+    }
+
+    @if (phase() === 'testing' && answeredCount() < trialsTotal) {
+      <div class="vision-card rounded-3xl bg-white p-8 md:p-10">
+        <p class="text-center text-xs font-medium uppercase tracking-[0.2em] text-[#441752]">
+          @if (answeredCount() < trialsFirstEye) {
+            Right eye · trial {{ currentTrialNumber() }} / {{ trialsTotal }}
+          } @else {
+            Left eye · trial {{ currentTrialNumber() }} / {{ trialsTotal }}
+          }
+        </p>
+        <h2 class="mt-2 text-center text-lg font-semibold text-[#1a1520] md:text-xl">
+          Where is the gap on the small ring?
+        </h2>
+        <p class="mx-auto mt-2 max-w-lg text-center text-sm text-[#6b6578]">
+          Tap the matching segment on the large ring. Take your time — there is no countdown.
+        </p>
+
+        <div class="mt-8 flex flex-col items-center gap-8 md:gap-9">
+          <div class="vision-ring-ref">
+            <svg
+              viewBox="-50 -50 100 100"
+              class="vision-ring-ref__svg h-[3.25rem] w-[3.25rem] text-[#2a173d] sm:h-14 sm:w-14"
+              [attr.aria-label]="'Reference gap direction: ' + labelForSegment(correctGapIndex())"
+            >
+              @for (i of segmentIndices; track i) {
+                @if (i !== correctGapIndex()) {
+                  <path [attr.d]="wedgePath(i, rInnerRef, rOuterRef)" fill="currentColor" />
+                }
+              }
+            </svg>
+            <span class="vision-ring-ref__caption mt-2 text-[10px] font-medium uppercase tracking-wider text-[#9a92a8]">
+              Small target (match this gap)
+            </span>
+          </div>
+
+          <div class="vision-ring-pick">
+            <svg
+              viewBox="-100 -100 200 200"
+              class="h-64 w-64 max-w-[min(100vw-3rem,20rem)] touch-manipulation"
+              role="img"
+              [attr.aria-label]="'Pick one of eight gap directions'"
+            >
+              @for (i of segmentIndices; track i) {
+                <path
+                  [attr.d]="wedgePath(i, rInnerPick, rOuterPick)"
+                  class="vision-segment"
+                  [class.vision-segment--disabled]="inputLocked()"
+                  (click)="onSegmentPick(i)"
+                />
+              }
+            </svg>
+            <span class="vision-ring-pick__caption mt-2 text-[11px] text-[#9a92a8]">Your answer</span>
+          </div>
+        </div>
+
+        <div class="mt-10 flex justify-center gap-2" aria-hidden="true">
+          @for (done of progressDots(); track $index) {
+            <span
+              class="h-2 w-2 rounded-full transition-colors"
+              [ngClass]="done ? 'bg-[#441752]' : 'bg-[#d8d0e6]'"
+            ></span>
+          }
+        </div>
+        @if (answeredCount() > 0 && answeredCount() < trialsTotal) {
+          <p class="mt-4 text-center text-xs leading-relaxed text-[#9a92a8]">
+            Incorrect answers so far: <span class="font-semibold text-[#5c5668]">{{ wrongAnswers() }}</span>
+          </p>
+        }
+      </div>
+    }
+
+    @if (phase() === 'prepRight') {
+      <div class="vision-card rounded-3xl bg-white p-10 text-center">
+        <div
+          class="mx-auto mb-6 flex h-20 w-28 items-center justify-center text-[#441752]"
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 120 80" class="h-full w-full">
+            <ellipse cx="40" cy="40" rx="22" ry="28" fill="none" stroke="currentColor" stroke-width="3" opacity="0.35" />
+            <ellipse cx="80" cy="40" rx="22" ry="28" fill="none" stroke="currentColor" stroke-width="3" />
+          </svg>
+        </div>
+        <h1 class="text-2xl font-semibold text-[#1a1520] md:text-3xl">Switch eyes</h1>
+        <p class="mt-3 text-lg text-[#5c5668]">
+          Cover your <span class="font-semibold text-[#2a173d]">right</span> eye. The next four trials check your
+          <span class="font-semibold text-[#441752]">left</span> eye.
+        </p>
+        <button type="button" class="vision-btn-primary mt-10" (click)="goPrepRightNext()">Next</button>
+      </div>
+    }
+
+    @if (phase() === 'instruct2') {
+      <div class="vision-card rounded-3xl bg-white p-10 text-center">
+        <h2 class="text-xl font-semibold text-[#1a1520] md:text-2xl">Same task — left eye</h2>
+        <p class="mx-auto mt-4 max-w-md text-sm leading-relaxed text-[#5c5668]">
+          Keep the right eye covered, arm’s length, and match the small ring’s gap to the large ring. Four more picks.
+        </p>
+        <button type="button" class="vision-btn-primary mt-10" (click)="goInstruct2Ready()">I’m ready</button>
+      </div> 
+    }
+
+    @if (phase() === 'results') {
+      <div class="vision-card vision-results rounded-3xl bg-white p-0 md:overflow-hidden">
+        <div class="vision-results__hero">
+          <h2 class="vision-results__title">{{ resultHeadline() }}</h2>
+          <p class="vision-results__mistake-line">{{ resultMistakeSummary() }}</p>
+        </div>
+
+        <div class="vision-results__body px-6 py-8 md:px-10 md:py-10">
+          <p class="vision-results__body-text">{{ resultBody() }}</p>
+          <p class="vision-results__doctor">{{ resultDoctorLine() }}</p>
+
+          <div class="mt-10 flex flex-wrap justify-center gap-3">
+            <button type="button" class="vision-btn-secondary" (click)="restart()">Retake test</button>
+            <a routerLink="/home" class="vision-btn-primary inline-flex no-underline">Back to home</a>
+          </div>
+        </div>
+      </div>
+    }
+  </main>
+</div>

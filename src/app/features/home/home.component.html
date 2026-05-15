@@ -1,0 +1,383 @@
+<section class="home-page w-full bg-white pt-[88px]">
+  <section
+    class="home-hero relative h-[550px] w-full overflow-hidden bg-[#dedcde]"
+  >
+    <img
+      src="/images/home-1.png"
+      alt="People wearing glasses"
+      class="home-hero-img absolute inset-0 h-full w-full object-cover object-center"
+    />
+
+    <div class="relative z-10 mx-auto flex h-full max-w-8xl items-center px-8">
+      <div class="home-hero-copy max-w-[540px]">
+        <h1
+          class="-ml-2 mb-6 text-lg font-semibold leading-tight tracking-tight text-[#1a1520] md:text-5xl md:font-semibold"
+        >
+          Virtual Try-On, Real Confidence!
+        </h1>
+
+        <p class="-ml-2 mb-3 text-sm font-medium leading-relaxed md:text-2xl">
+          Start your style journey and see your style picks to look your best
+        </p>
+
+        <p class="-ml-2 text-xs font-normal leading-relaxed md:text-xl">
+          Click the Try Them On button on a product page to begin
+        </p>
+      </div>
+    </div>
+  </section>
+  <div class="mx-auto max-w-6xl">
+    <section
+      class="grid grid-cols-1 items-center gap-10 px-8 py-12 md:grid-cols-[360px_1fr]"
+    >
+      <img
+        src="/images/home-2.png"
+        alt="Glasses collection"
+        class="h-[320px] w-full rounded-3xl object-cover shadow-[0_20px_50px_-12px_rgba(61,10,82,0.18)] ring-1 ring-black/[0.06] transition duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_28px_60px_-12px_rgba(61,10,82,0.22)]"
+      />
+
+      <div>
+        <h2
+          class="mb-3 text-3xl font-semibold leading-snug tracking-tight text-[#1a1520] md:text-4xl"
+        >
+          Find the frame that truly suits your face.
+        </h2>
+
+        <p
+          class="text-xl font-normal leading-relaxed text-[#4a4458] md:text-2xl md:leading-relaxed"
+        >
+          Try on styles made to highlight your unique features.
+        </p>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 gap-6 px-8 pb-12 md:grid-cols-2">
+      @for (category of categories; track category.slug) {
+        <article
+          class="group relative h-[340px] overflow-hidden rounded-3xl bg-gray-200 shadow-[0_12px_40px_-16px_rgba(0,0,0,0.2)] ring-1 ring-black/[0.04] transition duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_24px_50px_-12px_rgba(61,10,82,0.18)]"
+        >
+          <img
+            [src]="category.imageUrl"
+            [alt]="category.name"
+            class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+
+          <a
+            routerLink="/products"
+            [queryParams]="{ category: category.slug }"
+            class="absolute bottom-4 left-1/2 flex h-12 w-52 -translate-x-1/2 cursor-pointer items-center justify-center rounded-2xl bg-[#3d0a52] text-center text-lg font-medium text-white no-underline shadow-lg shadow-[#3d0a52]/25 transition duration-300 hover:-translate-y-0.5 hover:bg-[#4d1368] hover:shadow-xl hover:shadow-[#4d1368]/30 active:translate-y-0"
+          >
+            {{ category.name }}
+          </a>
+        </article>
+      }
+    </section>
+
+    <section class="px-8">
+      <p
+        class="mb-4 text-center text-sm font-medium uppercase tracking-[0.2em] text-[#A376A2]"
+      >
+        We’ve got your eyes covered.
+      </p>
+
+      <h2
+        class="mx-auto mb-10 max-w-4xl text-center text-3xl font-semibold leading-snug tracking-tight text-[#1a1520] md:text-4xl"
+      >
+        Get
+        <span class="text-[#b27ab3] underline decoration-2 underline-offset-4"
+          >tested</span
+        >, try
+        <span class="text-[#b27ab3] underline decoration-2 underline-offset-4"
+          >frames</span
+        >—your vision solutions, all in one place.
+      </h2>
+
+      <div
+        class="mx-auto grid max-w-6xl grid-cols-1 gap-6 pb-12 sm:grid-cols-2 lg:grid-cols-4"
+      >
+        @for (product of featuredProducts; track product.id) {
+          <app-shared-product-card
+            [product]="product"
+          ></app-shared-product-card>
+        }
+      </div>
+    </section>
+  </div>
+
+  <!-- Face classification -->
+  <section
+    class="w-full px-6 py-16 md:px-10 md:py-20"
+    aria-labelledby="home-face-class-heading"
+  >
+    <div
+      class="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 md:grid-cols-2 md:gap-12 lg:gap-14"
+    >
+      <div
+        class="home-face-frame relative mx-auto w-full max-w-md overflow-hidden rounded-3xl shadow-md ring-1 ring-gray-200 md:mx-0 md:max-w-none"
+      >
+        <div class="relative aspect-[4/5] w-full overflow-hidden">
+          <img
+            src="/images/home-6.png"
+            alt="Smiling customer with face mapping preview"
+            class="h-full w-full object-cover object-[center_15%]"
+            width="560"
+            height="700"
+            loading="lazy"
+            decoding="async"
+          />
+          <svg
+            class="pointer-events-none absolute inset-0 h-full w-full text-white"
+            viewBox="0 0 100 120"
+            preserveAspectRatio="xMidYMid slice"
+            aria-hidden="true"
+          >
+            <ellipse
+              cx="50"
+              cy="44"
+              rx="26"
+              ry="32"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="0.45"
+              stroke-dasharray="1.2 1.8"
+              opacity="0.92"
+            />
+            <ellipse
+              cx="50"
+              cy="48"
+              rx="18"
+              ry="22"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="0.35"
+              stroke-dasharray="1 1.5"
+              opacity="0.75"
+            />
+            <circle
+              cx="38"
+              cy="42"
+              r="1.2"
+              fill="currentColor"
+              opacity="0.95"
+            />
+            <circle
+              cx="62"
+              cy="42"
+              r="1.2"
+              fill="currentColor"
+              opacity="0.95"
+            />
+            <circle
+              cx="50"
+              cy="52"
+              r="1.1"
+              fill="currentColor"
+              opacity="0.95"
+            />
+            <circle cx="44" cy="62" r="1" fill="currentColor" opacity="0.9" />
+            <circle cx="56" cy="62" r="1" fill="currentColor" opacity="0.9" />
+            <path
+              d="M 32 72 Q 50 82 68 72"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="0.4"
+              stroke-dasharray="1.5 2"
+              opacity="0.85"
+            />
+            <line
+              x1="50"
+              y1="20"
+              x2="50"
+              y2="95"
+              stroke="currentColor"
+              stroke-width="0.25"
+              stroke-dasharray="2 3"
+              opacity="0.5"
+            />
+            <line
+              x1="22"
+              y1="48"
+              x2="78"
+              y2="48"
+              stroke="currentColor"
+              stroke-width="0.25"
+              stroke-dasharray="2 3"
+              opacity="0.45"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <div class="flex flex-col text-center md:max-w-xl md:text-left">
+        <p
+          class="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-[#A376A2]"
+        >
+          Smart face mapping
+        </p>
+        <h2
+          id="home-face-class-heading"
+          class="text-3xl font-semibold leading-snug tracking-tight text-black md:text-4xl lg:text-[2.15rem] lg:leading-[1.35]"
+        >
+          Next-gen
+          <span
+            class="text-[#A376A2] underline decoration-[#A376A2] decoration-2 underline-offset-8"
+          >
+            Face Classification</span
+          >
+          starts here.
+        </h2>
+        <p class="mt-5 max-w-prose text-base leading-relaxed text-[#5c5668]">
+          Map key points on your face in seconds so we can suggest frames that
+          fit your proportions, balance your features, and feel comfortable all
+          day—not a one-size-fits-all catalog.
+        </p>
+        <ul
+          class="mt-6 space-y-3 text-left text-sm leading-snug text-[#4a4458] md:mx-0"
+          role="list"
+        >
+          <li class="flex gap-3">
+            <span
+              class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#A376A2]/15 text-[11px] text-[#A376A2]"
+              aria-hidden="true"
+            >
+              <i class="fa-solid fa-check"></i>
+            </span>
+            <span
+              >Instant structure read—jawline, cheekbones, and bridge
+              width.</span
+            >
+          </li>
+          <li class="flex gap-3">
+            <span
+              class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#A376A2]/15 text-[11px] text-[#A376A2]"
+              aria-hidden="true"
+            >
+              <i class="fa-solid fa-check"></i>
+            </span>
+            <span
+              >Pair the read with style picks tuned to your face shape.</span
+            >
+          </li>
+          <li class="flex gap-3">
+            <span
+              class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#A376A2]/15 text-[11px] text-[#A376A2]"
+              aria-hidden="true"
+            >
+              <i class="fa-solid fa-check"></i>
+            </span>
+            <span
+              >Private by design—used only to improve your try-on flow.</span
+            >
+          </li>
+        </ul>
+        <a
+          routerLink="/face"
+          class="mt-9 inline-flex h-12 w-50 items-center justify-center rounded-2xl bg-[#3d0a52] px-8 text-base font-medium text-white shadow-md transition-all duration-300 hover:bg-[#4d1368] hover:shadow-[0_0_25px_rgba(93,32,128,0.45)] hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-[#A376A2] focus-visible:ring-offset-2 focus-visible:outline-none"
+        >
+          Try it now
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benefits -->
+  <section
+    class="home-benefit-section w-full bg-[#F9F9F9] px-6 py-12 md:px-10 md:py-14"
+    aria-labelledby="home-benefits-heading"
+  >
+    <h2
+      id="home-benefits-heading"
+      class="mb-8 text-center text-2xl font-semibold tracking-tight text-[#3d0a52] md:text-3xl"
+    >
+      Benefits when using our services
+    </h2>
+
+    <div
+      class="mx-auto grid max-w-6xl grid-cols-1 gap-5 md:grid-cols-3 md:gap-6"
+    >
+      <article
+        class="home-benefit-card group relative rounded-2xl border border-[#ececec] bg-white p-7 shadow-[0_2px_16px_rgba(0,0,0,0.04)] transition-all duration-300 ease-out hover:-translate-y-2 hover:border-[#dfd5eb] hover:shadow-[0_22px_50px_rgba(91,37,125,0.14)]"
+      >
+        <div
+          class="pointer-events-none absolute -right-6 -top-6 h-32 w-32 rounded-full bg-[#5b257d]/[0.12] opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"
+        ></div>
+
+        <div
+          class="home-benefit-icon-wrap relative z-[2] mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#f5f0fa] to-[#ebe3f2] text-[#5b257d] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition-all duration-300 group-hover:scale-110 group-hover:from-[#5b257d] group-hover:to-[#3d0a52] group-hover:text-white group-hover:shadow-[0_10px_28px_rgba(91,37,125,0.4)]"
+        >
+          <i
+            class="fa-solid fa-lightbulb text-2xl transition-transform duration-300 group-hover:drop-shadow-[0_0_10px_rgba(255,210,120,0.55)]"
+            aria-hidden="true"
+          ></i>
+        </div>
+        <h3
+          class="relative z-[2] mb-3 text-lg font-bold text-[#2a173d] transition-colors duration-300 group-hover:text-[#3d0a52]"
+        >
+          Inspiration
+        </h3>
+        <p
+          class="relative z-[2] text-sm leading-relaxed text-[#6b6578] transition-colors duration-300 group-hover:text-[#554f62]"
+        >
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc
+          vulputate libero et velit interdum, ac aliquet odio mattis.
+        </p>
+      </article>
+
+      <article
+        class="home-benefit-card group relative rounded-2xl border border-[#ececec] bg-white p-7 shadow-[0_2px_16px_rgba(0,0,0,0.04)] transition-all duration-300 ease-out hover:-translate-y-2 hover:border-[#dfd5eb] hover:shadow-[0_22px_50px_rgba(91,37,125,0.14)]"
+      >
+        <div
+          class="pointer-events-none absolute -right-6 -top-6 h-32 w-32 rounded-full bg-[#5b257d]/[0.12] opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"
+        ></div>
+
+        <div
+          class="home-benefit-icon-wrap relative z-[2] mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#f5f0fa] to-[#ebe3f2] text-[#5b257d] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition-all duration-300 group-hover:scale-110 group-hover:from-[#5b257d] group-hover:to-[#3d0a52] group-hover:text-white group-hover:shadow-[0_10px_28px_rgba(91,37,125,0.4)]"
+        >
+          <i
+            class="fa-solid fa-headset text-2xl transition-transform duration-300"
+            aria-hidden="true"
+          ></i>
+        </div>
+        <h3
+          class="relative z-[2] mb-3 text-lg font-bold text-[#2a173d] transition-colors duration-300 group-hover:text-[#3d0a52]"
+        >
+          24/7 Customer Services
+        </h3>
+        <p
+          class="relative z-[2] text-sm leading-relaxed text-[#6b6578] transition-colors duration-300 group-hover:text-[#554f62]"
+        >
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc
+          vulputate libero et velit interdum, ac aliquet odio mattis.
+        </p>
+      </article>
+
+      <article
+        class="home-benefit-card group relative rounded-2xl border border-[#ececec] bg-white p-7 shadow-[0_2px_16px_rgba(0,0,0,0.04)] transition-all duration-300 ease-out hover:-translate-y-2 hover:border-[#dfd5eb] hover:shadow-[0_22px_50px_rgba(91,37,125,0.14)]"
+      >
+        <div
+          class="pointer-events-none absolute -right-6 -top-6 h-32 w-32 rounded-full bg-[#5b257d]/[0.12] opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"
+        ></div>
+
+        <div
+          class="home-benefit-icon-wrap relative z-[2] mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#f5f0fa] to-[#ebe3f2] text-[#5b257d] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition-all duration-300 group-hover:scale-110 group-hover:from-[#5b257d] group-hover:to-[#3d0a52] group-hover:text-white group-hover:shadow-[0_10px_28px_rgba(91,37,125,0.4)]"
+        >
+          <i
+            class="fa-solid fa-truck-fast text-2xl transition-transform duration-300"
+            aria-hidden="true"
+          ></i>
+        </div>
+        <h3
+          class="relative z-[2] mb-3 text-lg font-bold text-[#2a173d] transition-colors duration-300 group-hover:text-[#3d0a52]"
+        >
+          Express Shipping
+        </h3>
+        <p
+          class="relative z-[2] text-sm leading-relaxed text-[#6b6578] transition-colors duration-300 group-hover:text-[#554f62]"
+        >
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc
+          vulputate libero et velit interdum, ac aliquet odio mattis.
+        </p>
+      </article>
+    </div>
+  </section>
+</section>
