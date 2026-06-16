@@ -90,9 +90,15 @@
       </button>
 
       <div class="hidden md:flex items-center gap-2 ml-3">
-        <a class="icon-btn" href="#"
-          ><i class="fa-regular fa-heart text-lg"></i
-        ></a>
+        <a class="icon-btn relative cursor-pointer" routerLink="/wishlist">
+          <span
+            *ngIf="wishlistCount > 0"
+            class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#441752] text-[10px] font-bold text-white"
+          >
+            {{ wishlistCount }}
+          </span>
+          <i class="fa-regular fa-heart text-lg"></i>
+        </a>
         <a class="icon-btn" routerLink="/profile"
           ><i class="fa-regular fa-user text-lg"></i
         ></a>

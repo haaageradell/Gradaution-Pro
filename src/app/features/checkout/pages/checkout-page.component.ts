@@ -8,9 +8,10 @@ import {
   Validators,
 } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { catchError, EMPTY, finalize, forkJoin, of, switchMap } from 'rxjs';
+import { catchError, EMPTY, finalize, forkJoin, map, Observable, of, switchMap, throwError } from 'rxjs';
 import {
   CartCoupon,
+  CartLineItem,
   CartPriceSummary,
   CartViewModel,
 } from '../../../core/models/cart.models';
@@ -55,7 +56,13 @@ export class CheckoutPageComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly isBrowser: boolean;
   private readonly router = inject(Router);
-  readonly addresses: CheckoutAddress[] = [
+
+  /**
+   * TEMPORARY MOCK DATA — display-only addresses for the checkout UI.
+   * Defined here in checkout-page.component.ts; not loaded from the API.
+   * Not sent when placing an order (POST /api/Order has no shippingAddressId).
+   */
+  readonly mockAddresses: CheckoutAddress[] = [
     {
       id: 'addr-home',
       name: 'Huzefa Bagwala',
@@ -73,6 +80,7 @@ export class CheckoutPageComponent implements OnInit {
   ];
 
   selectedAddressId = 'addr-home';
+  cartItems: CartLineItem[] = [];
   paymentMethods: PaymentMethodView[] = [];
   selectedPaymentMethodId: string | null = null;
   isLoading = true;
@@ -162,6 +170,7 @@ export class CheckoutPageComponent implements OnInit {
 
   selectPayment(id: string): void {
     this.selectedPaymentMethodId = id;
+    console.log('[Checkout] selectedPaymentMethodId:', this.selectedPaymentMethodId);
   }
 
   deletePaymentMethod(id: string, event: Event): void {
@@ -182,50 +191,16 @@ export class CheckoutPageComponent implements OnInit {
   }
 
   submitNewCard(): void {
-    if (this.cardForm.invalid || this.isSavingCard) {
-      this.cardForm.markAllAsTouched();
+    if (this.isSavingCard) {
       return;
     }
-
-    const { holderName, cardNumber, expireDate, cvv, saveCard } =
-      this.cardForm.getRawValue();
-    const parsed = this.parseExpiry(expireDate ?? '');
-    if (!parsed) {
-      this.toastr.warning('Use MM/YY for expire date', 'Checkout');
-      return;
-    }
-    this.isSavingCard = true;
-    const body = {
-      cardHolderName: holderName?.trim(),
-      cardNumber: (cardNumber ?? '').replace(/\s/g, ''),
-      expiryMonth: parsed.month,
-      expiryYear: parsed.year,
-      cvv: cvv?.trim(),
-      saveForFutureCheckout: !!saveCard,
-    };
-    this.paymentMethodService
-      .addPaymentMethod(body)
-      .pipe(
-        switchMap(() => this.paymentMethodService.getPaymentMethods()),
-        finalize(() => {
-          this.isSavingCard = false;
-        }),
-        catchError((err: HttpErrorResponse) => {
-          console.error(err);
-          this.toastr.error('Could not save card', 'Checkout');
-          return EMPTY;
-        }),
-      )
-      .subscribe({
-        next: (list: PaymentMethodView[]) => {
-          this.paymentMethods = list;
-          if (list.length) {
-            this.selectedPaymentMethodId = list[list.length - 1]!.id;
-          }
+    this.savePaymentMethodFromForm().subscribe({
+      next: (saved) => {
+        if (saved?.id) {
           this.toastr.success('Card saved', 'Checkout');
-          this.cardForm.reset({ saveCard: true });
-        },
-      });
+        }
+      },
+    });
   }
 
   applyCoupon(): void {
@@ -268,37 +243,58 @@ export class CheckoutPageComponent implements OnInit {
     if (this.isPlacingOrder) {
       return;
     }
-    this.isPlacingOrder = true;
-    const body = {
-      shippingAddressId: this.selectedAddressId,
-      paymentMethodId: this.selectedPaymentMethodId,
-      couponCode: this.couponCodeInput.trim() || null,
-    };
-    this.orderService
-      .createOrder(body)
-      .pipe(
-        finalize(() => {
-          this.isPlacingOrder = false;
-        }),
-        catchError((err: HttpErrorResponse) => {
-          console.error(err);
-          this.toastr.error('Could not place order', 'Checkout');
-          return EMPTY;
-        }),
-      )
-      .subscribe({
-        next: () => {
-          this.toastr.success('Order placed successfully', 'Checkout');
 
-          this.cartService.getCart().subscribe({
-            next: (cart) => {
-              this.cartService.updateCartCountFromItems([]);
-            },
-          });
+    if (!this.cartItems.length) {
+      this.toastr.warning('Your cart is empty', 'Checkout');
+      return;
+    }
 
-          this.router.navigate(['/orders']);
-        },
-      });
+    console.log('[Checkout] payment form values:', this.cardForm.getRawValue());
+    console.log('[Checkout] selectedPaymentMethodId:', this.selectedPaymentMethodId);
+
+    const selectedPayment = this.resolveSelectedPayment();
+    if (selectedPayment?.id) {
+      this.executePlaceOrder(selectedPayment.id);
+      return;
+    }
+
+    if (this.cardForm.valid) {
+      this.isPlacingOrder = true;
+      this.savePaymentMethodFromForm()
+        .pipe(
+          switchMap((saved) => {
+            if (!saved?.id) {
+              return throwError(() => new Error('Payment method not saved'));
+            }
+            return this.orderService.createOrder(this.buildOrderBody(saved.id));
+          }),
+          finalize(() => {
+            this.isPlacingOrder = false;
+          }),
+          catchError((err: HttpErrorResponse | Error) => {
+            if (err instanceof HttpErrorResponse) {
+              console.error('[Checkout] place order API error:', err);
+              this.toastr.error('Could not place order', 'Checkout');
+            } else {
+              this.toastr.warning(
+                'Please add and select a payment method before placing your order',
+                'Checkout',
+              );
+            }
+            return EMPTY;
+          }),
+        )
+        .subscribe({
+          next: (response) => this.handlePlaceOrderSuccess(response),
+        });
+      return;
+    }
+
+    this.cardForm.markAllAsTouched();
+    this.toastr.warning(
+      'Please add and select a payment method before placing your order',
+      'Checkout',
+    );
   }
 
   starFilled(index: number, rating: number): boolean {
@@ -378,14 +374,19 @@ export class CheckoutPageComponent implements OnInit {
       .subscribe({
         next: ({ cart, payments, orders }) => {
           if (cart) {
+            this.cartItems = [...cart.items];
             this.summary = { ...cart.summary };
             this.coupon = cart.coupon;
             if (cart.estimatedDelivery?.trim()) {
               this.estimatedDeliveryLabel = cart.estimatedDelivery.trim();
             }
           }
-          this.paymentMethods = Array.isArray(payments) ? payments : [];
+          this.paymentMethods = this.filterValidPaymentMethods(
+            Array.isArray(payments) ? payments : [],
+          );
+          console.log('[Checkout] GET /api/PaymentMethod response:', this.paymentMethods);
           this.selectedPaymentMethodId = this.paymentMethods[0]?.id ?? null;
+          console.log('[Checkout] selectedPaymentMethodId:', this.selectedPaymentMethodId);
           if (Array.isArray(orders) && orders.length) {
             this.orderIdForCoupon = orders[0]!.id || null;
           }
@@ -434,5 +435,152 @@ export class CheckoutPageComponent implements OnInit {
       return null;
     }
     return { month, year };
+  }
+
+  private savePaymentMethodFromForm(): Observable<PaymentMethodView | null> {
+    const formValues = this.cardForm.getRawValue();
+    console.log('[Checkout] payment form values:', formValues);
+
+    if (this.cardForm.invalid) {
+      this.cardForm.markAllAsTouched();
+      return of(null);
+    }
+
+    const parsed = this.parseExpiry(formValues.expireDate ?? '');
+    if (!parsed) {
+      this.toastr.warning('Use MM/YY for expire date', 'Checkout');
+      return of(null);
+    }
+
+    const cardNum = (formValues.cardNumber ?? '').replace(/\s/g, '');
+    const body = {
+      provider: this.detectCardProvider(cardNum),
+      lastDigits: cardNum.slice(-4),
+      expireDate: this.toExpiryIso(parsed.month, parsed.year),
+      isDefault: !!formValues.saveCard,
+    };
+    console.log('[Checkout] POST /api/PaymentMethod request body:', body);
+
+    this.isSavingCard = true;
+    return this.paymentMethodService.addPaymentMethod(body).pipe(
+      switchMap(() => this.paymentMethodService.getPaymentMethods()),
+      map((list) => {
+        console.log('[Checkout] GET /api/PaymentMethod response:', list);
+        this.paymentMethods = this.filterValidPaymentMethods(list);
+        const saved =
+          this.pickNewlySavedPayment(this.paymentMethods, body.lastDigits) ??
+          this.paymentMethods[this.paymentMethods.length - 1] ??
+          null;
+        if (saved?.id) {
+          this.selectedPaymentMethodId = saved.id;
+          console.log('[Checkout] selectedPaymentMethodId:', this.selectedPaymentMethodId);
+        }
+        this.cardForm.reset({ saveCard: true });
+        return saved;
+      }),
+      finalize(() => {
+        this.isSavingCard = false;
+      }),
+      catchError((err: HttpErrorResponse) => {
+        console.error('[Checkout] POST /api/PaymentMethod error:', err);
+        this.toastr.error('Could not save card', 'Checkout');
+        return of(null);
+      }),
+    );
+  }
+
+  private resolveSelectedPayment(): PaymentMethodView | undefined {
+    return this.paymentMethods.find(
+      (pm) => pm.id && pm.id === this.selectedPaymentMethodId,
+    );
+  }
+
+  private filterValidPaymentMethods(
+    list: PaymentMethodView[],
+  ): PaymentMethodView[] {
+    return list.filter((pm) => pm.id.trim() !== '');
+  }
+
+  private pickNewlySavedPayment(
+    list: PaymentMethodView[],
+    lastDigits: string,
+  ): PaymentMethodView | undefined {
+    return list.find((pm) => pm.last4 === lastDigits);
+  }
+
+  private buildOrderBody(paymentMethodId: string) {
+    return {
+      currency: 'EGP',
+      discount: this.summary.discount,
+      shippingCost: this.summary.shipping,
+      estimatedDelivery: this.buildEstimatedDeliveryIso(),
+      paymentMethodId,
+      items: this.cartItems.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.unitPrice,
+      })),
+    };
+  }
+
+  private executePlaceOrder(paymentMethodId: string): void {
+    const body = this.buildOrderBody(paymentMethodId);
+    console.log('[Checkout] place order payload:', body);
+    console.log('[Checkout] selectedPaymentMethodId:', this.selectedPaymentMethodId);
+
+    this.isPlacingOrder = true;
+    this.orderService
+      .createOrder(body)
+      .pipe(
+        finalize(() => {
+          this.isPlacingOrder = false;
+        }),
+        catchError((err: HttpErrorResponse) => {
+          console.error('[Checkout] place order API error:', err);
+          this.toastr.error('Could not place order', 'Checkout');
+          return EMPTY;
+        }),
+      )
+      .subscribe({
+        next: (response) => this.handlePlaceOrderSuccess(response),
+      });
+  }
+
+  private handlePlaceOrderSuccess(response: unknown): void {
+    console.log('[Checkout] place order API response:', response);
+    this.toastr.success('Order placed successfully', 'Checkout');
+
+    this.cartService.getCart().subscribe({
+      next: () => {
+        this.cartService.updateCartCountFromItems([]);
+      },
+    });
+
+    this.router.navigate(['/orders']);
+  }
+
+  private detectCardProvider(cardNumber: string): string {
+    if (/^4/.test(cardNumber)) {
+      return 'Visa';
+    }
+    if (/^5[1-5]/.test(cardNumber) || /^2[2-7]/.test(cardNumber)) {
+      return 'Mastercard';
+    }
+    return 'Card';
+  }
+
+  private toExpiryIso(month: number, year: number): string {
+    const d = new Date(Date.UTC(year, month, 0, 23, 59, 59));
+    return d.toISOString();
+  }
+
+  private buildEstimatedDeliveryIso(): string {
+    const parsed = Date.parse(this.estimatedDeliveryLabel);
+    if (Number.isFinite(parsed)) {
+      return new Date(parsed).toISOString();
+    }
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return d.toISOString();
   }
 }

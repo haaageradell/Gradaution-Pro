@@ -16,6 +16,8 @@ import { ProductsComponent } from './pages/products/products.component';
 import { CartPageComponent } from './features/cart/pages/cart-page.component';
 import { CheckoutPageComponent } from './features/checkout/pages/checkout-page.component';
 import { ProfileComponent } from './features/profile/profile.component';
+import { WishlistPageComponent } from './features/wishlist/pages/wishlist-page.component';
+import { ProductDetailsComponent } from './pages/product-details/product-details.component';
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
 
@@ -70,6 +72,11 @@ export const routes: Routes = [
         title: 'Products Page',
       },
       {
+        path: 'products/:id',
+        component: ProductDetailsComponent,
+        title: 'Product Details Page',
+      },
+      {
         path: 'cart',
         component: CartPageComponent,
         title: 'Cart Page',
@@ -83,6 +90,11 @@ export const routes: Routes = [
         path: 'profile',
         component: ProfileComponent,
         title: 'Profile Page',
+      },
+      {
+        path: 'wishlist',
+        component: WishlistPageComponent,
+        title: 'Wishlist Page',
       },
     ],
   },

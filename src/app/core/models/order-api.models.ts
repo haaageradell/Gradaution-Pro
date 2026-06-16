@@ -1,9 +1,19 @@
 /** API-aligned order types (camelCase JSON; server may return PascalCase — normalized in services). */
 
+export interface CreateOrderItemRequest {
+  productId: number;
+  quantity: number;
+  price: number;
+}
+
+/** POST /api/Order — matches backend CreateOrderDto (Swagger). */
 export interface CreateOrderRequest {
-  shippingAddressId?: string | null;
+  currency?: string | null;
+  discount?: number;
+  shippingCost?: number;
+  estimatedDelivery?: string | null;
+  items?: CreateOrderItemRequest[] | null;
   paymentMethodId?: string | null;
-  couponCode?: string | null;
 }
 
 export interface ApplyCouponRequest {

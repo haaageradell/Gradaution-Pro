@@ -7,13 +7,12 @@ export interface PaymentMethodView {
   cardHolderName: string | null;
 }
 
+/** POST /api/PaymentMethod — matches backend CreatePaymentMethodDto (Swagger). */
 export interface CreatePaymentMethodRequest {
-  cardHolderName: string;
-  cardNumber: string;
-  expiryMonth: number;
-  expiryYear: number;
-  cvv: string;
-  saveForFutureCheckout?: boolean;
+  provider?: string | null;
+  lastDigits?: string | null;
+  expireDate?: string | null;
+  isDefault?: boolean;
 }
 
 export interface ShippingAddress {

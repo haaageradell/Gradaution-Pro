@@ -103,6 +103,8 @@ function mapPaymentMethod(row: unknown): PaymentMethodView {
     o['id'] ?? o['Id'] ?? o['paymentMethodId'] ?? o['PaymentMethodId'] ?? '',
   );
   const last4Raw =
+    o['lastDigits'] ??
+    o['LastDigits'] ??
     o['last4'] ??
     o['Last4'] ??
     o['lastFourDigits'] ??
@@ -111,19 +113,25 @@ function mapPaymentMethod(row: unknown): PaymentMethodView {
     o['cardNumber'] ??
     o['CardNumber'];
   const last4 = maskLastFour(last4Raw);
-  const expiryMonth = pickNumber(o, [
-    'expiryMonth',
-    'ExpiryMonth',
-    'expirationMonth',
-    'ExpirationMonth',
-  ]);
-  const expiryYear = pickNumber(o, [
-    'expiryYear',
-    'ExpiryYear',
-    'expirationYear',
-    'ExpirationYear',
-  ]);
+  const expireDateRaw = pickString(o, ['expireDate', 'ExpireDate']);
+  const parsedExpiry = parseExpireDate(expireDateRaw);
+  const expiryMonth =
+    pickNumber(o, [
+      'expiryMonth',
+      'ExpiryMonth',
+      'expirationMonth',
+      'ExpirationMonth',
+    ]) ?? parsedExpiry?.month ?? null;
+  const expiryYear =
+    pickNumber(o, [
+      'expiryYear',
+      'ExpiryYear',
+      'expirationYear',
+      'ExpirationYear',
+    ]) ?? parsedExpiry?.year ?? null;
   const brand = pickString(o, [
+    'provider',
+    'Provider',
     'brand',
     'Brand',
     'cardBrand',
@@ -177,4 +185,17 @@ function pickString(o: Record<string, unknown>, keys: string[]): string | null {
     }
   }
   return null;
+}
+
+function parseExpireDate(
+  raw: string | null,
+): { month: number; year: number } | null {
+  if (!raw) {
+    return null;
+  }
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) {
+    return null;
+  }
+  return { month: d.getUTCMonth() + 1, year: d.getUTCFullYear() };
 }
