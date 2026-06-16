@@ -8,6 +8,7 @@ export interface Product {
   rating?: number;
   imageUrl?: string;
   thumbnailUrl?: string;
+  twoDImageUrl?: string;
   categoryId?: number;
   categoryName?: string;
   brandId?: number;
@@ -17,6 +18,7 @@ export interface Product {
   size?: string;
   stockQuantity?: number;
   isActive?: boolean;
+  mediaUrl?: string;
 }
 
 export interface ProductsApiResponse {

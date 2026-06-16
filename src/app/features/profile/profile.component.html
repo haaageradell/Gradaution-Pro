@@ -1,0 +1,433 @@
+<div class="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+  <div class="mb-6 md:mb-8">
+    <h1 class="text-2xl md:text-3xl font-extrabold text-[#2D2340]">Account Settings</h1>
+    <p class="text-sm text-[#9D93AF] mt-1">Manage your profile, orders, addresses and security options</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <!-- Sidebar Navigation -->
+    <div class="lg:col-span-3">
+      <app-sidebar-menu
+        [activeTab]="activeTab"
+        (tabChange)="onTabChange($event)"
+        (logout)="onLogout()"
+      ></app-sidebar-menu>
+    </div>
+
+    <!-- Content Sections Area -->
+    <div class="lg:col-span-9 flex flex-col gap-6">
+
+      <!-- 1. PERSONAL INFO TAB -->
+      <ng-container *ngIf="activeTab === 'personal-info'">
+        <app-profile-section
+          title="Personal Information"
+          description="Update your contact details and basic info."
+        >
+          <!-- Skeleton Loading -->
+          <div *ngIf="profileLoading" class="animate-pulse flex flex-col gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="h-16 bg-gray-100 rounded-xl"></div>
+              <div class="h-16 bg-gray-100 rounded-xl"></div>
+              <div class="h-16 bg-gray-100 rounded-xl"></div>
+              <div class="h-16 bg-gray-100 rounded-xl"></div>
+              <div class="h-16 bg-gray-100 rounded-xl md:col-span-2"></div>
+            </div>
+            <div class="flex justify-end h-10 w-32 bg-gray-200 rounded-xl self-end"></div>
+          </div>
+
+          <!-- Error Fallback -->
+          <div *ngIf="!profileLoading && profileError" class="p-6 text-center border border-dashed border-red-200 rounded-2xl bg-red-50 flex flex-col items-center gap-3">
+            <i class="fa-solid fa-triangle-exclamation text-2xl text-red-500"></i>
+            <h4 class="font-bold text-red-700">Failed to load personal info</h4>
+            <p class="text-xs text-red-500">We couldn't connect to the server to fetch your profile details.</p>
+            <button
+              type="button"
+              (click)="loadProfile()"
+              class="mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition"
+            >
+              Retry Load
+            </button>
+          </div>
+
+          <!-- Form Component -->
+          <app-profile-form
+            *ngIf="!profileLoading && !profileError"
+            [profile]="profile"
+            [saving]="profileSaving"
+            (save)="onSaveProfile($event)"
+          ></app-profile-form>
+        </app-profile-section>
+
+        <!-- Mock Contact Preferences Card (Matching the mockup) -->
+        <app-profile-section
+          *ngIf="!profileLoading && !profileError"
+          title="Contact preferences"
+        >
+          <div class="flex flex-col gap-4">
+            <div class="flex items-start gap-3">
+              <input
+                id="promoEmail"
+                type="checkbox"
+                class="w-4.5 h-4.5 rounded text-[#4B1D5A] border-[#ECE8F3] focus:ring-[#4B1D5A] mt-1"
+                checked
+              />
+              <div class="flex flex-col gap-1">
+                <label for="promoEmail" class="text-sm font-semibold text-[#2D2340]">
+                  Send me promotions and offers by email.
+                </label>
+                <p class="text-xs text-[#9D93AF] leading-relaxed max-w-xl">
+                  Sign up to receive news and exclusive offers from Glasses.com. You can withdraw consent at any time. For more details see our <a href="javascript:void(0)" class="underline text-[#4B1D5A]">Privacy Policy</a>. I certify that I am 16 years or older.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex justify-end mt-4">
+              <button
+                type="button"
+                (click)="onSaveSettings()"
+                class="px-6 py-3 bg-[#4B1D5A] text-white text-xs font-bold rounded-xl transition hover:bg-[#3C1748] shadow-sm tracking-wide"
+              >
+                SAVE CHANGES
+              </button>
+            </div>
+          </div>
+        </app-profile-section>
+      </ng-container>
+
+      <!-- 2. MY ORDERS TAB -->
+      <app-profile-section
+        *ngIf="activeTab === 'orders'"
+        title="My Orders"
+        description="View your order history and tracking status."
+      >
+        <div class="flex flex-col gap-4">
+          <div
+            *ngFor="let order of orders"
+            class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl border border-[#ECE8F3] bg-white hover:border-[#D9CFE8] transition shadow-sm"
+          >
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl bg-[#F6F4F8] flex items-center justify-center text-[#4B1D5A]">
+                <i class="fa-solid fa-receipt text-lg"></i>
+              </div>
+              <div class="flex flex-col gap-1">
+                <span class="text-sm font-bold text-[#2D2340]">{{ order.orderNumber }}</span>
+                <span class="text-xs text-[#9D93AF]">Placed on {{ order.date | date:'mediumDate' }}</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-6 justify-between sm:justify-end">
+              <div class="flex flex-col sm:items-end gap-1">
+                <span class="text-xs text-[#9D93AF]">Total Price</span>
+                <span class="text-sm font-extrabold text-[#2D2340]">
+                  {{ order.totalPrice | currency: 'EGP ' : 'symbol' : '1.0-0' }}
+                </span>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <span
+                  class="px-3 py-1 rounded-full text-xs font-semibold border"
+                  [ngClass]="getOrderStatusClass(order.status)"
+                >
+                  {{ order.status }}
+                </span>
+
+                <button
+                  type="button"
+                  class="px-4 py-2 border border-[#ECE8F3] text-xs font-bold text-[#5A4F73] rounded-xl hover:bg-[#F6F4F8] hover:text-[#4B1D5A] transition"
+                >
+                  Details
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </app-profile-section>
+
+      <!-- 3. WISHLIST TAB -->
+      <app-profile-section
+        *ngIf="activeTab === 'wishlist'"
+        title="Wishlist"
+        description="Your handpicked favorites and bookmarked frames."
+      >
+        <!-- Empty State -->
+        <div *ngIf="wishlistItems.length === 0" class="text-center py-12 flex flex-col items-center gap-3">
+          <div class="w-16 h-16 rounded-full bg-[#FDF4F4] text-[#D04E4E] flex items-center justify-center">
+            <i class="fa-regular fa-heart text-2xl"></i>
+          </div>
+          <h4 class="text-base font-bold text-[#2D2340]">Your wishlist is empty</h4>
+          <p class="text-xs text-[#9D93AF] max-w-sm">Explore eyeglasses and sunglasses pages to bookmark frames you love!</p>
+          <a
+            routerLink="/products"
+            class="mt-3 px-6 py-2.5 bg-[#4B1D5A] text-white rounded-xl text-xs font-bold hover:bg-[#3C1748] transition"
+          >
+            Browse Products
+          </a>
+        </div>
+
+        <!-- Wishlist Grid -->
+        <div *ngIf="wishlistItems.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <div
+            *ngFor="let item of wishlistItems"
+            class="group bg-white rounded-2xl border border-[#ECE8F3] overflow-hidden hover:border-[#D9CFE8] transition shadow-sm flex flex-col justify-between"
+          >
+            <div class="relative bg-[#F6F4F8] aspect-video w-full overflow-hidden flex items-center justify-center">
+              <img
+                [src]="item.productImage"
+                [alt]="item.productName"
+                class="h-full w-full object-cover group-hover:scale-105 transition duration-300"
+              />
+              <button
+                type="button"
+                (click)="onRemoveWishlistItem(item.id)"
+                class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white text-red-500 shadow hover:bg-red-50 flex items-center justify-center transition"
+                title="Remove from wishlist"
+              >
+                <i class="fa-solid fa-heart"></i>
+              </button>
+            </div>
+            <div class="p-4 flex flex-col gap-2 flex-1 justify-between">
+              <h4 class="text-sm font-bold text-[#2D2340] line-clamp-1 leading-tight">{{ item.productName }}</h4>
+              <div class="flex items-center justify-between mt-1 pt-1 border-t border-[#F6F4F8]">
+                <span class="text-sm font-extrabold text-[#4B1D5A]">
+                  {{ item.price | currency: 'EGP ' : 'symbol' : '1.0-0' }}
+                </span>
+                <button
+                  type="button"
+                  class="text-xs font-bold text-[#4B1D5A] hover:underline flex items-center gap-1.5"
+                >
+                  <span>Add to Cart</span>
+                  <i class="fa-solid fa-cart-plus"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </app-profile-section>
+
+      <!-- 4. PAYMENT METHODS TAB -->
+      <app-profile-section
+        *ngIf="activeTab === 'payment-methods'"
+        title="Payment Methods"
+        description="Securely manage your saved cards and payment accounts."
+      >
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div
+            *ngFor="let card of paymentMethods"
+            class="p-5 rounded-2xl border border-[#ECE8F3] bg-white shadow-sm flex flex-col gap-4 relative"
+          >
+            <div class="flex items-center justify-between">
+              <!-- Brand Icon -->
+              <div class="text-2xl text-[#2D2340]">
+                <i *ngIf="card.brand === 'Visa'" class="fa-brands fa-cc-visa text-blue-600"></i>
+                <i *ngIf="card.brand === 'Mastercard'" class="fa-brands fa-cc-mastercard text-red-500"></i>
+              </div>
+              <button
+                type="button"
+                class="text-xs text-[#9D93AF] hover:text-red-500 transition"
+              >
+                Delete
+              </button>
+            </div>
+            <div class="flex flex-col gap-1 mt-2">
+              <span class="text-sm font-mono font-bold tracking-widest text-[#2D2340]">
+                ••••  ••••  ••••  {{ card.last4 }}
+              </span>
+              <span class="text-[10px] text-[#9D93AF] uppercase tracking-wide">Card Holder: {{ card.cardHolderName }}</span>
+            </div>
+          </div>
+
+          <!-- Add Method Dotted Card -->
+          <button
+            type="button"
+            (click)="onAddPaymentMethodMock()"
+            class="border-2 border-dashed border-[#ECE8F3] hover:border-[#4B1D5A] bg-white rounded-2xl p-5 flex flex-col items-center justify-center text-center gap-3 transition min-h-[130px] group"
+          >
+            <div class="w-10 h-10 rounded-full bg-[#F6F4F8] text-[#5A4F73] group-hover:bg-[#4B1D5A]/10 group-hover:text-[#4B1D5A] flex items-center justify-center transition">
+              <i class="fa-solid fa-plus text-sm"></i>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-xs font-bold text-[#2D2340]">Add Payment Method</span>
+              <span class="text-[10px] text-[#9D93AF]">Visa, Mastercard, or wallet</span>
+            </div>
+          </button>
+        </div>
+      </app-profile-section>
+
+      <!-- 5. ADDRESSES TAB -->
+      <app-profile-section
+        *ngIf="activeTab === 'addresses'"
+        title="Saved Addresses"
+        description="Manage your delivery addresses for quick checkouts."
+      >
+        <!-- Top Action bar -->
+        <div class="flex justify-end mb-4 -mt-2">
+          <button
+            type="button"
+            (click)="openAddAddressModal()"
+            class="px-4 py-2.5 bg-[#4B1D5A] hover:bg-[#3C1748] text-white text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-sm"
+          >
+            <i class="fa-solid fa-plus"></i> ADD ADDRESS
+          </button>
+        </div>
+
+        <!-- Skeleton Loader -->
+        <div *ngIf="addressesLoading" class="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-pulse">
+          <div class="h-44 bg-gray-100 rounded-2xl border border-gray-200"></div>
+          <div class="h-44 bg-gray-100 rounded-2xl border border-gray-200"></div>
+        </div>
+
+        <!-- Error Fallback -->
+        <div *ngIf="!addressesLoading && addressesError" class="p-6 text-center border border-dashed border-red-200 rounded-2xl bg-red-50 flex flex-col items-center gap-3">
+          <i class="fa-solid fa-triangle-exclamation text-2xl text-red-500"></i>
+          <h4 class="font-bold text-red-700">Failed to load addresses</h4>
+          <p class="text-xs text-red-500">We couldn't retrieve your saved addresses from the server.</p>
+          <button
+            type="button"
+            (click)="loadAddresses()"
+            class="mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition"
+          >
+            Retry Load
+          </button>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!addressesLoading && !addressesError && addresses.length === 0" class="text-center py-10 flex flex-col items-center gap-3">
+          <div class="w-14 h-14 rounded-full bg-[#F6F4F8] text-[#9D93AF] flex items-center justify-center">
+            <i class="fa-solid fa-map-location-dot text-xl"></i>
+          </div>
+          <h4 class="text-sm font-bold text-[#2D2340]">No addresses found</h4>
+          <p class="text-xs text-[#9D93AF] max-w-xs">Please add a shipping address to facilitate orders during checkout.</p>
+        </div>
+
+        <!-- Addresses Grid -->
+        <div *ngIf="!addressesLoading && !addressesError && addresses.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <app-address-card
+            *ngFor="let item of addresses"
+            [address]="item"
+            (edit)="openEditAddressModal($event)"
+            (delete)="openDeleteConfirm($event)"
+          ></app-address-card>
+        </div>
+      </app-profile-section>
+
+      <!-- 6. SETTINGS TAB -->
+      <app-profile-section
+        *ngIf="activeTab === 'settings'"
+        title="Settings"
+        description="Configure your portal preferences and configurations."
+      >
+        <div class="flex flex-col gap-6">
+          <!-- Dark Mode -->
+          <div class="flex items-center justify-between pb-4 border-b border-[#F6F4F8]">
+            <div class="flex flex-col gap-1 pr-6">
+              <span class="text-sm font-bold text-[#2D2340]">Appearance Dark Mode</span>
+              <span class="text-xs text-[#9D93AF]">Enable or disable the interface dark theme styling.</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer select-none">
+              <input
+                type="checkbox"
+                [(ngModel)]="settings.darkMode"
+                class="sr-only peer"
+              />
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4B1D5A]"></div>
+            </label>
+          </div>
+
+          <!-- Email Notifications -->
+          <div class="flex items-center justify-between pb-4 border-b border-[#F6F4F8]">
+            <div class="flex flex-col gap-1 pr-6">
+              <span class="text-sm font-bold text-[#2D2340]">Email Notifications</span>
+              <span class="text-xs text-[#9D93AF]">Receive alerts regarding order updates and promotion newsletters.</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer select-none">
+              <input
+                type="checkbox"
+                [(ngModel)]="settings.notificationsEnabled"
+                class="sr-only peer"
+              />
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4B1D5A]"></div>
+            </label>
+          </div>
+
+          <!-- Language Selection -->
+          <div class="flex flex-col gap-2">
+            <label for="languageSelect" class="text-sm font-bold text-[#2D2340]">Portal Language</label>
+            <p class="text-xs text-[#9D93AF]">Choose your default language for interface localization.</p>
+            <select
+              id="languageSelect"
+              [(ngModel)]="settings.language"
+              class="w-full sm:max-w-xs px-4 py-2.5 rounded-xl border border-[#ECE8F3] bg-[#F8F6FA] text-sm text-[#2D2340] focus:outline-none focus:ring-2 focus:ring-[#4B1D5A]/20 transition mt-1"
+            >
+              <option value="en">English (US)</option>
+              <option value="ar">العربية (Arabic)</option>
+              <option value="fr">Français (French)</option>
+            </select>
+          </div>
+
+          <!-- Save Button -->
+          <div class="flex justify-end pt-4 border-t border-[#F6F4F8]">
+            <button
+              type="button"
+              (click)="onSaveSettings()"
+              class="px-6 py-3 bg-[#4B1D5A] text-white text-xs font-bold rounded-xl transition hover:bg-[#3C1748] shadow-sm tracking-wide"
+            >
+              SAVE SETTINGS
+            </button>
+          </div>
+        </div>
+      </app-profile-section>
+
+    </div>
+  </div>
+</div>
+
+<!-- Reusable Address Modal -->
+<app-address-modal
+  [isOpen]="isAddressModalOpen"
+  [address]="selectedAddress"
+  [saving]="addressSaving"
+  (save)="onSaveAddress($event)"
+  (close)="isAddressModalOpen = false"
+></app-address-modal>
+
+<!-- Custom Delete Confirmation Modal -->
+<div
+  *ngIf="isDeleteConfirmOpen"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4"
+>
+  <div
+    class="absolute inset-0 bg-[#2D2340]/60 backdrop-blur-sm transition-opacity"
+    (click)="closeDeleteConfirm()"
+  ></div>
+
+  <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm border border-[#ECE8F3] overflow-hidden p-6 flex flex-col gap-4 text-center">
+    <div class="w-12 h-12 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto">
+      <i class="fa-solid fa-trash-can text-lg"></i>
+    </div>
+    <div class="flex flex-col gap-1">
+      <h3 class="text-base font-bold text-[#2D2340]">Delete Address</h3>
+      <p class="text-xs text-[#9D93AF] leading-relaxed">
+        Are you sure you want to delete this address? This action cannot be undone.
+      </p>
+    </div>
+    <div class="flex items-center justify-center gap-3 mt-2">
+      <button
+        type="button"
+        (click)="closeDeleteConfirm()"
+        [disabled]="deletingAddress"
+        class="flex-1 py-2.5 border border-[#ECE8F3] text-xs font-bold text-[#5A4F73] rounded-xl hover:bg-[#F6F4F8] transition"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        (click)="onDeleteAddressConfirm()"
+        [disabled]="deletingAddress"
+        class="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-xl transition flex items-center justify-center"
+      >
+        <i *ngIf="deletingAddress" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+        <span>Delete</span>
+      </button>
+    </div>
+  </div>
+</div>

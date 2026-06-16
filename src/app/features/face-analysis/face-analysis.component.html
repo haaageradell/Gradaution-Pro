@@ -1,1 +1,326 @@
-<p>face-analysis works!</p>
+<div
+  class="bg-grid-mesh relative min-h-screen py-16 px-4 sm:px-6 lg:px-8 overflow-hidden bg-gray-50/50"
+>
+  <!-- Top Background Ambient Glows -->
+  <div
+    class="pointer-events-none absolute left-1/4 top-10 -z-10 h-96 w-96 rounded-full bg-[#3d0a52]/8 blur-3xl"
+  ></div>
+  <div
+    class="pointer-events-none absolute right-1/4 top-20 -z-10 h-96 w-96 rounded-full bg-cyan-500/5 blur-3xl"
+  ></div>
+
+  <div class="mx-auto max-w-5xl">
+    <!-- Hero Section -->
+    <header class="text-center mb-12 animate-[fadeIn_0.8s_ease-out] px-4">
+      <span
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-[#A376A2] bg-[#A376A2]/15 border border-[#A376A2]/20 uppercase tracking-widest"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          class="h-4.5 w-4.5 animate-pulse"
+        >
+          <path
+            d="M10 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.465 14.493a1.23 1.23 0 0 0 .41 1.412A9.957 9.957 0 0 0 10 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 0 0-13.074.003Z"
+          />
+        </svg>
+        AI Face Analysis
+      </span>
+      <h1
+        class="mt-6 text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#2D2340] tracking-tight leading-tight"
+      >
+        Find the Perfect Glasses <br class="hidden sm:inline" />
+        for Your
+        <span
+          class="text-transparent bg-clip-text bg-gradient-to-r from-[#3d0a52] to-[#5b257d]"
+          >Face Shape</span
+        >
+      </h1>
+      <p
+        class="mt-4 text-sm sm:text-base text-gray-500 max-w-2xl mx-auto leading-relaxed"
+      >
+        Upload a photo or use your camera and let AI analyze your face to
+        recommend the most suitable frames.
+      </p>
+    </header>
+
+    <!-- Main Card Container -->
+    <main
+      class="rounded-3xl border border-[#ECE8F3] bg-white/80 backdrop-blur-md p-6 sm:p-10 shadow-xl shadow-gray-200/50"
+    >
+      <!-- STEP 1: Image Upload / Capture Selection -->
+      <section *ngIf="scanningState() === 'idle' && !previewImageUrl()">
+        <!-- Premium Tabs Toggle -->
+        <div class="flex justify-center mb-8">
+          <div
+            class="inline-flex rounded-xl bg-[#F6F3FA] p-1 border border-[#ECE8F3]/60 shadow-inner"
+          >
+            <button
+              type="button"
+              (click)="setTab('upload')"
+              [class.bg-white]="activeTab() === 'upload'"
+              [class.text-[#3d0a52]]="activeTab() === 'upload'"
+              [class.shadow-sm]="activeTab() === 'upload'"
+              class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-900 transition cursor-pointer"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+                class="h-4.5 w-4.5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z"
+                />
+              </svg>
+              Upload Photo
+            </button>
+            <button
+              type="button"
+              (click)="setTab('camera')"
+              [class.bg-white]="activeTab() === 'camera'"
+              [class.text-[#3d0a52]]="activeTab() === 'camera'"
+              [class.shadow-sm]="activeTab() === 'camera'"
+              class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-900 transition cursor-pointer"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+                class="h-4.5 w-4.5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15a2.25 2.25 0 0 0 2.25-2.25V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"
+                />
+              </svg>
+              Use Camera
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Upload/Camera Components -->
+        <div class="mt-4 transition-all duration-300">
+          @if (activeTab() === "upload") {
+            <app-face-upload (fileSelected)="onFileSelected($event)">
+            </app-face-upload>
+          }
+
+          @if (activeTab() === "camera") {
+            <app-camera-capture
+              (photoCaptured)="onCameraCaptured($event)"
+              (permissionDenied)="onCameraError($event)"
+            >
+            </app-camera-capture>
+          }
+        </div>
+
+        <!-- Premium Empty State Graphic -->
+        <div class="mt-12 text-center text-gray-400">
+          <div class="flex justify-center">
+            <!-- Simulated AI wireframe mesh face -->
+            <svg
+              class="h-20 w-20 text-[#3d0a52]/25"
+              viewBox="0 0 100 100"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1"
+            >
+              <path
+                d="M50 15 C 30 15, 20 28, 20 50 C 20 72, 35 85, 50 85 C 65 85, 80 72, 80 50 C 80 28, 70 15, 50 15 Z"
+                stroke-dasharray="2,2"
+              />
+              <path d="M50 15 L 50 85 M20 50 L 80 50" />
+              <circle cx="50" cy="50" r="35" />
+              <circle cx="55" cy="50" r="1" fill="currentColor" />
+              <circle cx="45" cy="50" r="1" fill="currentColor" />
+              <circle cx="50" cy="15" r="2.5" fill="currentColor" />
+              <circle cx="50" cy="85" r="2.5" fill="currentColor" />
+              <circle cx="20" cy="50" r="2.5" fill="currentColor" />
+              <circle cx="80" cy="50" r="2.5" fill="currentColor" />
+            </svg>
+          </div>
+          <p
+            class="mt-4 text-xs font-semibold uppercase tracking-wider text-gray-400"
+          >
+            Upload a photo or capture one using your camera to analyze.
+          </p>
+        </div>
+      </section>
+
+      <!-- STEP 2: Preview & Scanning Mode -->
+      <section
+        *ngIf="
+          previewImageUrl() &&
+          scanningState() !== 'done' &&
+          scanningState() !== 'error'
+        "
+        class="flex flex-col items-center"
+      >
+        <div
+          class="relative w-full max-w-md aspect-[4/3] rounded-2xl overflow-hidden shadow-lg border border-[#ECE8F3]"
+        >
+          <div class="scanner-container h-full w-full bg-[#2D2340]">
+            <img
+              [src]="previewImageUrl()"
+              alt="Scan preview"
+              class="h-full w-full object-cover -scale-x-100"
+            />
+
+            <!-- Laser scanning overlays -->
+            <div
+              *ngIf="scanningState() === 'scanning'"
+              class="scanner-laser"
+            ></div>
+            <div *ngIf="scanningState() === 'scanning'" class="mesh-dots"></div>
+          </div>
+        </div>
+
+        <!-- Scanning loading states -->
+        <div
+          *ngIf="scanningState() === 'scanning'"
+          class="mt-8 flex flex-col items-center text-center"
+        >
+          <div class="flex items-center gap-3">
+            <div
+              class="h-5 w-5 animate-spin rounded-full border-3 border-[#3d0a52] border-t-transparent"
+            ></div>
+            <h3 class="text-lg font-bold text-[#2D2340]">
+              {{ scanningMessage() }}
+            </h3>
+          </div>
+          <p class="mt-1.5 text-xs font-medium text-gray-400">
+            Scanning face geometry using neural networks...
+          </p>
+        </div>
+
+        <!-- Non-Scanning Preview Actions: Replace & Clear options -->
+        <div
+          *ngIf="scanningState() === 'idle'"
+          class="mt-8 flex flex-col sm:flex-row gap-4 w-full max-w-md px-4"
+        >
+          <button
+            type="button"
+            (click)="startAnalysis()"
+            class="flex-1 py-3 px-6 font-bold text-white bg-[#3d0a52] hover:bg-[#4d1368] transition hover:scale-105 active:scale-95 rounded-xl shadow-md shadow-[#3d0a52]/25 text-center cursor-pointer text-sm"
+          >
+            Analyze Face Shape
+          </button>
+
+          <div class="flex gap-2 flex-1">
+            <button
+              type="button"
+              (click)="resetImageState()"
+              class="flex-1 py-3 px-3 font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition rounded-xl text-center cursor-pointer text-xs"
+            >
+              Replace Photo
+            </button>
+            <button
+              type="button"
+              (click)="resetImageState()"
+              class="flex-1 py-3 px-3 font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 transition rounded-xl text-center cursor-pointer text-xs border border-rose-100"
+            >
+              Clear Photo
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 3: Results Display -->
+      <section
+        *ngIf="scanningState() === 'done' && analysisResult()"
+        class="animate-[fadeIn_0.5s_ease-out]"
+      >
+        <app-face-analysis-result
+          [result]="analysisResult()!"
+          [imageUrl]="previewImageUrl()!"
+        ></app-face-analysis-result>
+
+        <!-- New Scan Trigger -->
+        <div
+          class="mt-12 border-t border-[#ECE8F3]/60 pt-8 flex justify-center"
+        >
+          <button
+            type="button"
+            (click)="resetImageState()"
+            class="flex items-center gap-2 px-6 py-3 font-bold text-white bg-[#2D2340] hover:bg-[#201830] transition rounded-xl cursor-pointer"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="2"
+              stroke="currentColor"
+              class="h-4.5 w-4.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+              />
+            </svg>
+            Analyze Another Face
+          </button>
+        </div>
+      </section>
+
+      <!-- STEP 4: Error Handling View -->
+      <section
+        *ngIf="scanningState() === 'error'"
+        class="flex flex-col items-center text-center py-6 animate-[fadeIn_0.3s_ease-out]"
+      >
+        <div
+          class="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 text-rose-500 border border-rose-100 mb-6"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.8"
+            stroke="currentColor"
+            class="h-8 w-8"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+            />
+          </svg>
+        </div>
+
+        <h3 class="text-2xl font-bold text-[#2D2340] mb-2">
+          Analysis Interrupted
+        </h3>
+        <p class="text-sm text-gray-500 max-w-md mb-8 leading-relaxed">
+          {{
+            errorMessage() ||
+              "We encountered an error during face shape detection. Please try again."
+          }}
+        </p>
+
+        <div class="flex gap-4">
+          <button
+            type="button"
+            (click)="resetImageState()"
+            class="px-6 py-3 font-bold text-white bg-[#3d0a52] hover:bg-[#4d1368] transition rounded-xl shadow-md cursor-pointer"
+          >
+            Start Over
+          </button>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>

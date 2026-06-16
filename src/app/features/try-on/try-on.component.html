@@ -1,1 +1,218 @@
-<p>try-on works!</p>
+<!-- Styling overrides for strict container confinement -->
+<style>
+  .tryon-container a-scene {
+    position: absolute !important;
+    width: 100% !important;
+    height: 100% !important;
+    top: 0;
+    left: 0;
+  }
+
+  .tryon-container .a-canvas {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    z-index: 2 !important;
+    background: transparent !important;
+  }
+
+  .tryon-container video {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    z-index: 1 !important;
+  }
+</style>
+
+<div
+  class="tryon-container relative w-full h-[750px] md:h-[850px] rounded-[2rem] overflow-hidden shadow-[0_24px_50px_-12px_rgba(61,10,82,0.18)] border border-white/5 transition-all duration-500 ease-out"
+  [ngClass]="showSplash() ? 'bg-[#1a0f24]' : 'bg-transparent'">
+
+  <!-- Onboarding Onscreen Modal (z-50) -->
+  <div *ngIf="showSplash()"
+    class="absolute inset-0 z-50 flex flex-col items-center justify-center backdrop-blur-md bg-[#1a0f24]/85 p-6 transition-all duration-300">
+    <!-- Glassmorphic Modal Box -->
+    <div
+      class="relative w-full max-w-md bg-[#251533]/90 border border-white/10 rounded-[2.5rem] shadow-2xl p-8 backdrop-blur-lg flex flex-col items-center text-center">
+
+      <!-- Top Row: OPTIVIO Brand & Close Action -->
+      <div class="w-full flex items-center justify-between mb-8 pb-4 border-b border-white/5">
+        <!-- Logo -->
+        <div class="flex items-center gap-2">
+          <div
+            class="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-r from-[#8b3c9b] to-[#3d0a52]">
+            <span class="text-white text-xs font-black">O</span>
+          </div>
+          <span class="text-xs font-black tracking-widest text-white uppercase">Optivio</span>
+        </div>
+
+        <!-- Close (X) -->
+        <button type="button" (click)="goBack()"
+          class="h-8 w-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Main Headline -->
+      <h2 class="text-xl font-extrabold tracking-tight text-white mb-2">Virtual Try-On</h2>
+      <p class="text-[13px] text-white/60 max-w-xs leading-relaxed mb-8">
+        Try on <span class="text-purple-400 font-semibold">{{ selectedProduct()?.name || 'Glasses Frame' }}</span> in
+        real-time or using a device photo.
+      </p>
+
+      <!-- Selection Options Buttons -->
+      <div class="flex flex-col gap-4 w-full">
+
+        <!-- Live Webcam Mode -->
+        <button type="button" (click)="startLiveAR()"
+          class="flex items-center gap-4 w-full px-5 py-4 rounded-3xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-[#8b3c9b]/50 hover:shadow-lg hover:shadow-[#3d0a52]/20 text-white transition-all duration-300 hover:scale-[1.02] active:scale-95 group text-left cursor-pointer">
+          <div
+            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/5 text-purple-300 transition-all duration-300 group-hover:scale-110 group-hover:bg-[#3d0a52] group-hover:text-white group-hover:border-transparent">
+            <i class="fa-solid fa-user text-sm"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-sm tracking-wide">Live try-on</h4>
+            <p class="text-[11px] text-white/50 mt-0.5">Use your webcam in real-time</p>
+          </div>
+        </button>
+
+        <!-- Static Photo Mode -->
+        <button type="button" (click)="fileInput.click()"
+          class="flex items-center gap-4 w-full px-5 py-4 rounded-3xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-[#8b3c9b]/50 hover:shadow-lg hover:shadow-[#3d0a52]/20 text-white transition-all duration-300 hover:scale-[1.02] active:scale-95 group text-left cursor-pointer">
+          <div
+            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/5 text-purple-300 transition-all duration-300 group-hover:scale-110 group-hover:bg-[#3d0a52] group-hover:text-white group-hover:border-transparent">
+            <i class="fa-solid fa-camera text-sm"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-sm tracking-wide">Picture mode</h4>
+            <p class="text-[11px] text-white/50 mt-0.5">Upload a static photo from device</p>
+          </div>
+        </button>
+
+      </div>
+
+      <!-- Hidden File Upload trigger -->
+      <input #fileInput type="file" accept="image/*" class="hidden" (change)="onPhotoUploaded($event)" />
+
+    </div>
+  </div>
+
+  <!-- Loading State Indicator Overlay (z-40) -->
+  <div *ngIf="(isARStarting() || isModelLoading() || isPhotoProcessing()) && !showSplash() && !errorMessage()"
+    class="absolute inset-0 z-40 flex flex-col items-center justify-center bg-[#1a0f24]/90 text-white text-center p-6 backdrop-blur-md animate-fade-in-quick">
+    <div class="flex flex-col items-center gap-4">
+      <div class="relative flex h-16 w-16 items-center justify-center">
+        <div class="absolute inset-0 rounded-full border-4 border-purple-500/20"></div>
+        <div class="absolute inset-0 rounded-full border-4 border-t-purple-500 animate-spin"></div>
+        <div class="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
+          <i class="fa-solid fa-glasses text-purple-400 text-xs"></i>
+        </div>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold tracking-wide">
+          {{ isARStarting() ? 'Starting Face Tracker...' : (isPhotoProcessing() ? 'Processing Try-On Photo...' :
+          'Loading 3D Frame...') }}
+        </h3>
+        <p class="text-[11px] text-white/60 mt-1 max-w-[200px] mx-auto leading-relaxed">
+          {{ isARStarting() ? 'Calibrating face tracking sensors' : (isPhotoProcessing() ? 'Applying premium eyewear
+          onto your face...' : 'Downloading premium 3D glasses assets') }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Panel (z-40) -->
+  <div *ngIf="errorMessage() && !showSplash()"
+    class="absolute inset-0 z-40 flex flex-col items-center justify-center bg-[#1a0f24]/95 text-white text-center p-6">
+    <div
+      class="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-400 mb-4 border border-rose-500/20 shadow-lg">
+      <i class="fa-solid fa-circle-exclamation fa-xl animate-bounce"></i>
+    </div>
+    <h3 class="text-sm font-bold">Try-On Encountered an Error</h3>
+    <p class="text-xs text-white/60 max-w-xs mt-1 mb-6 leading-relaxed">
+      {{ errorMessage() }}
+    </p>
+    <div class="flex gap-3">
+      <button type="button" (click)="stopAR()"
+        class="px-5 py-2 text-xs font-bold bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl shadow-md transition cursor-pointer">
+        Menu Options
+      </button>
+      <button type="button" (click)="startAR()"
+        class="px-5 py-2 text-xs font-bold bg-[#3d0a52] hover:bg-[#4d1368] text-white rounded-xl shadow-md transition cursor-pointer">
+        Retry Setup
+      </button>
+    </div>
+  </div>
+
+  <!-- Floating Left Close/Back Button (z-30) -->
+  <button *ngIf="!showSplash()" type="button" (click)="stopAR()"
+    class="absolute top-4 left-4 z-30 flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-white/10 bg-[#1a0f24]/40 hover:bg-[#1a0f24]/80 text-white backdrop-blur-md shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer text-xs font-semibold">
+    <i class="fa-solid fa-arrow-left"></i>
+    Exit Try-On
+  </button>
+
+  <!-- Floating Right Product Info Details Badge (z-30) - Displays name, brand, and twoDImageUrl -->
+  <div *ngIf="selectedProduct() && !showSplash() && !errorMessage()"
+    class="absolute top-4 right-4 z-30 bg-[#1a0f24]/75 border border-white/10 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl max-w-xs animate-fade-in flex items-center gap-3 text-white text-left">
+    <!-- Product Image (twoDImageUrl prioritized) -->
+    <img
+      [src]="selectedProduct()?.twoDImageUrl || selectedProduct()?.imageUrl || selectedProduct()?.thumbnailUrl || 'https://picsum.photos/80/80'"
+      alt="{{ selectedProduct()?.name }}"
+      class="h-11 w-11 object-contain rounded-lg bg-white/5 border border-white/10" />
+    <div class="flex flex-col gap-0.5">
+      <span
+        class="text-[8px] font-bold text-purple-300 uppercase tracking-widest bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20 self-start">
+        {{ selectedProduct()?.brandName || 'Optivio' }}
+      </span>
+      <h3 class="text-xs font-extrabold text-white leading-tight">
+        {{ selectedProduct()?.name }}
+      </h3>
+      <span class="text-[10px] font-bold text-white/90">
+        {{ selectedProduct()?.price || 0 }} EGP
+      </span>
+    </div>
+  </div>
+
+
+
+  <!-- Hidden Canvas for drawing photo frames continuously -->
+  <canvas #photoCanvas class="absolute -left-[9999px] opacity-0" style="pointer-events: none;"></canvas>
+
+  <!-- Processed Image Preview for Static Photo Mode -->
+  <div *ngIf="isStaticImageMode() && uploadedImageSrc()"
+    class="absolute inset-0 z-10 bg-[#1a0f24] flex items-center justify-center p-6">
+    <img [src]="uploadedImageSrc()"
+      class="max-w-full max-h-full object-contain rounded-[1.5rem] shadow-2xl border border-white/10"
+      alt="Processed Try-On Eyewear" />
+  </div>
+
+  <!-- MindAR / A-Frame rendering window (Only for Live Camera Mode) -->
+  <a-scene *ngIf="!isStaticImageMode()" #arScene mindar-face="autoStart: false" embedded vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false" class="w-full h-full">
+    <a-assets>
+      <a-asset-item id="headOccluderModel"
+        src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/face-tracking/assets/sparkar/headOccluder.glb"></a-asset-item>
+    </a-assets>
+
+    <a-camera active="true" look-controls="enabled: false" wasd-controls="enabled: false" position="0 0 0"></a-camera>
+
+    <!-- Head Occluder model attached to anchor 168 -->
+    <a-entity mindar-face-target="anchorIndex: 168">
+      <a-gltf-model src="#headOccluderModel" [attr.position]="occluderPositionStr" scale="0.07 0.07 0.07"
+        mindar-face-occluder="true"></a-gltf-model>
+    </a-entity>
+
+    <!-- Dynamic 3D glasses model attached to anchor 168 -->
+    <a-entity mindar-face-target="anchorIndex: 168">
+      <a-gltf-model *ngIf="selectedModel && !showSplash()" [attr.src]="selectedModel"
+        [attr.rotation]="glassesRotationStr" [attr.position]="glassesPositionStr" [attr.scale]="glassesScaleStr"
+        (model-loaded)="onModelLoaded()" (model-error)="onModelError($event)"></a-gltf-model>
+    </a-entity>
+  </a-scene>
+</div>

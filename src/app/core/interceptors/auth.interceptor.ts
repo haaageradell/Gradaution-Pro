@@ -14,6 +14,7 @@ const PROTECTED_API_PREFIXES = [
   '/api/order',
   '/api/admin',
   '/api/auth/change-password',
+  '/api/ai',
 ] as const;
 
 function getRequestPath(url: string): string {

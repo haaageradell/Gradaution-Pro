@@ -1,139 +1,437 @@
 <section
-  class="w-full bg-slate-50 py-12 px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24 Contact-section"
+  class="bg-grid-mesh relative min-h-screen py-16 px-4 sm:px-6 lg:px-8 overflow-hidden bg-gray-50/50"
 >
+  <!-- Background Ambient Glows -->
   <div
-    class="container mx-auto max-w-7xl px-6 pb-12 pt-4 md:px-10 md:pt-6 lg:px-14 lg:pt-8"
-  >
-    <!-- Title -->
-    <h2
-      class="main-text text-3xl pt-10 mb-10 sm:text-4xl font-semibold text-slate-900 mb-10"
-    >
-      Contact us
-    </h2>
+    class="pointer-events-none absolute left-1/4 top-10 -z-10 h-96 w-96 rounded-full bg-[#3d0a52]/5 blur-3xl"
+  ></div>
+  <div
+    class="pointer-events-none absolute right-1/4 top-20 -z-10 h-96 w-96 rounded-full bg-cyan-500/5 blur-3xl"
+  ></div>
 
-    <!-- Cards Grid -->
-    <div class="grid gap-6 md:grid-cols-2">
-      <!-- Card 1 -->
-      <article class="flex flex-col bg-slate-100 p-6 rounded-sm">
-        <div class="flex items-start gap-3 mb-4">
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg">
-            <i class="fa-solid fa-envelope fa-2xl"></i>
-          </div>
+  <div class="container mx-auto max-w-7xl">
+    <!-- Hero Title -->
+    <header class="text-center mb-16 px-4">
+      <span
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-[#A376A2] bg-[#A376A2]/15 border border-[#A376A2]/20 uppercase tracking-widest"
+      >
+        <i class="fa-solid fa-headset animate-pulse"></i>
+        Support Hub
+      </span>
+      <h1
+        class="mt-6 text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#2D2340] tracking-tight leading-tight"
+      >
+        Contact Us & Support
+      </h1>
+      <p
+        class="mt-4 text-sm sm:text-base text-gray-500 max-w-2xl mx-auto leading-relaxed"
+      >
+        Have a question or need assistance? Send us a message or find our customer support details below.
+      </p>
+    </header>
 
-          <div>
-            <h3 class="font-semibold text-slate-900">Got questions?</h3>
-            <p class="text-sm text-slate-600 font-semibold">
-              We’ve got answers.
+    <!-- Split Screen Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <!-- Left Side: Interactive Contact Form -->
+      <main class="lg:col-span-7">
+        <div
+          class="bg-white rounded-3xl border border-[#ECE8F3] p-8 sm:p-10 shadow-lg relative overflow-hidden transition-all duration-300"
+        >
+          <!-- Internal Ambient Glow -->
+          <div
+            class="pointer-events-none absolute right-0 top-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-[#3d0a52]/5 blur-3xl"
+          ></div>
+
+          <!-- SUCCESS STATE -->
+          <div
+            *ngIf="isSubmitted()"
+            class="flex flex-col items-center text-center py-10 animate-fade-in"
+          >
+            <div
+              class="flex h-20 w-20 items-center justify-center rounded-full bg-[#3d0a52]/10 text-[#3d0a52] border-2 border-[#3d0a52]/20 mb-6 animate-bounce"
+            >
+              <i class="fa-solid fa-circle-check fa-3x"></i>
+            </div>
+            
+            <h2 class="text-2xl font-extrabold text-[#2D2340] mb-3">
+              Message Sent!
+            </h2>
+            <p class="text-sm text-gray-500 max-w-md mb-8 leading-relaxed">
+              Thank you, <strong>{{ contactForm.get('firstName')?.value }}</strong>. 
+              We have received your message regarding <strong>{{ contactForm.get('reason')?.value }}</strong>. 
+              Our team will review your inquiry and get back to you shortly.
             </p>
-          </div>
-        </div>
 
-        <p class="text-sm text-slate-700">
-          <span class="font-semibold">Click her</span>e to email us, or
-          <span class="font-semibold">live chat</span> with us.
-        </p>
-      </article>
-
-      <!-- Card 2 -->
-      <article class="flex flex-col bg-slate-100 p-6 rounded-sm">
-        <div class="flex items-start gap-3 mb-4">
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg">
-            <i class="fa-regular fa-message fa-flip-horizontal fa-2xl"></i>
+            <button
+              type="button"
+              (click)="resetForm()"
+              class="flex h-12 px-8 items-center justify-center font-medium text-white bg-[#3d0a52] rounded-2xl shadow-lg shadow-[#3d0a52]/25 transition duration-300 hover:-translate-y-0.5 hover:bg-[#4d1368] hover:shadow-xl hover:shadow-[#4d1368]/30 active:translate-y-0 cursor-pointer text-lg"
+            >
+              Send Another Message
+            </button>
           </div>
 
-          <h3 class="font-semibold text-slate-900">Customer service hours</h3>
-        </div>
+          <!-- FORM STATE -->
+          <div *ngIf="!isSubmitted()">
+            <h2 class="text-2xl font-extrabold text-[#2D2340]">
+              Send Us a Message
+            </h2>
+            <p class="text-sm text-gray-500 mt-2">
+              Fill out the form below and our customer care team will respond within 24 hours.
+            </p>
 
-        <p class="text-sm text-slate-700">Sunday - Thursday: 9:00am - 5:00pm</p>
+            <form
+              [formGroup]="contactForm"
+              (ngSubmit)="onSubmit()"
+              class="space-y-6 mt-8"
+            >
+              <!-- Name Row -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <!-- First Name -->
+                <div class="flex flex-col gap-1.5">
+                  <label
+                    for="firstName"
+                    class="text-xs font-bold text-gray-600 uppercase tracking-wider"
+                  >
+                    First Name <span class="text-rose-500">*</span>
+                  </label>
+                  <input
+                    id="firstName"
+                    type="text"
+                    formControlName="firstName"
+                    placeholder="John"
+                    class="w-full rounded-xl border p-3.5 text-sm transition focus:outline-none focus:ring-4"
+                    [class.border-rose-400]="isInvalid('firstName')"
+                    [class.focus:ring-rose-200]="isInvalid('firstName')"
+                    [class.border-[#ECE8F3]]="!isInvalid('firstName')"
+                    [class.focus:border-[#3d0a52]]="!isInvalid('firstName')"
+                    [class.focus:ring-[#3d0a52]/15]="!isInvalid('firstName')"
+                  />
+                  <span
+                    *ngIf="isInvalid('firstName')"
+                    class="text-xs text-rose-500 font-medium"
+                  >
+                    First name is required (min 2 chars).
+                  </span>
+                </div>
 
-        <p class="text-sm text-slate-700 mt-1">Friday - Sunday: CLOSED</p>
-      </article>
+                <!-- Last Name -->
+                <div class="flex flex-col gap-1.5">
+                  <label
+                    for="lastName"
+                    class="text-xs font-bold text-gray-600 uppercase tracking-wider"
+                  >
+                    Last Name <span class="text-rose-500">*</span>
+                  </label>
+                  <input
+                    id="lastName"
+                    type="text"
+                    formControlName="lastName"
+                    placeholder="Doe"
+                    class="w-full rounded-xl border p-3.5 text-sm transition focus:outline-none focus:ring-4"
+                    [class.border-rose-400]="isInvalid('lastName')"
+                    [class.focus:ring-rose-200]="isInvalid('lastName')"
+                    [class.border-[#ECE8F3]]="!isInvalid('lastName')"
+                    [class.focus:border-[#3d0a52]]="!isInvalid('lastName')"
+                    [class.focus:ring-[#3d0a52]/15]="!isInvalid('lastName')"
+                  />
+                  <span
+                    *ngIf="isInvalid('lastName')"
+                    class="text-xs text-rose-500 font-medium"
+                  >
+                    Last name is required (min 2 chars).
+                  </span>
+                </div>
+              </div>
 
-      <!-- Card 3 -->
-      <article class="flex flex-col bg-slate-100 p-6 rounded-sm">
-        <div class="flex items-start gap-3 mb-4">
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg">
-            <i class="fa-solid fa-phone-volume fa-2xl"></i>
+              <!-- Contact Row -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <!-- Email -->
+                <div class="flex flex-col gap-1.5">
+                  <label
+                    for="email"
+                    class="text-xs font-bold text-gray-600 uppercase tracking-wider"
+                  >
+                    Email Address <span class="text-rose-500">*</span>
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    formControlName="email"
+                    placeholder="john.doe@example.com"
+                    class="w-full rounded-xl border p-3.5 text-sm transition focus:outline-none focus:ring-4"
+                    [class.border-rose-400]="isInvalid('email')"
+                    [class.focus:ring-rose-200]="isInvalid('email')"
+                    [class.border-[#ECE8F3]]="!isInvalid('email')"
+                    [class.focus:border-[#3d0a52]]="!isInvalid('email')"
+                    [class.focus:ring-[#3d0a52]/15]="!isInvalid('email')"
+                  />
+                  <span
+                    *ngIf="isInvalid('email')"
+                    class="text-xs text-rose-500 font-medium"
+                  >
+                    Please enter a valid email address.
+                  </span>
+                </div>
+
+                <!-- Order Number -->
+                <div class="flex flex-col gap-1.5">
+                  <label
+                    for="orderNumber"
+                    class="text-xs font-bold text-gray-600 uppercase tracking-wider"
+                  >
+                    Order Number <span class="text-gray-400">(Optional)</span>
+                  </label>
+                  <input
+                    id="orderNumber"
+                    type="text"
+                    formControlName="orderNumber"
+                    placeholder="e.g. #ORD-12345"
+                    class="w-full rounded-xl border border-[#ECE8F3] p-3.5 text-sm transition focus:outline-none focus:ring-4 focus:border-[#3d0a52] focus:ring-[#3d0a52]/15"
+                  />
+                </div>
+              </div>
+
+              <!-- Mapping Dropdowns -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <!-- Country select -->
+                <div class="flex flex-col gap-1.5">
+                  <label
+                    for="country"
+                    class="text-xs font-bold text-gray-600 uppercase tracking-wider"
+                  >
+                    Country <span class="text-rose-500">*</span>
+                  </label>
+                  <select
+                    id="country"
+                    formControlName="country"
+                    class="w-full rounded-xl border border-[#ECE8F3] p-3.5 text-sm bg-white focus:outline-none focus:ring-4 focus:border-[#3d0a52] focus:ring-[#3d0a52]/15 cursor-pointer"
+                  >
+                    <option *ngFor="let c of countries" [value]="c">
+                      {{ c }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Type of inquiry -->
+                <div class="flex flex-col gap-1.5">
+                  <label
+                    for="type"
+                    class="text-xs font-bold text-gray-600 uppercase tracking-wider"
+                  >
+                    Inquiry Type <span class="text-rose-500">*</span>
+                  </label>
+                  <select
+                    id="type"
+                    formControlName="type"
+                    class="w-full rounded-xl border border-[#ECE8F3] p-3.5 text-sm bg-white focus:outline-none focus:ring-4 focus:border-[#3d0a52] focus:ring-[#3d0a52]/15 cursor-pointer"
+                  >
+                    <option *ngFor="let t of inquiryTypes" [value]="t">
+                      {{ t }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Reason select -->
+              <div class="flex flex-col gap-1.5">
+                <label
+                  for="reason"
+                  class="text-xs font-bold text-gray-600 uppercase tracking-wider"
+                >
+                  Reason for Contact <span class="text-rose-500">*</span>
+                </label>
+                <select
+                  id="reason"
+                  formControlName="reason"
+                  class="w-full rounded-xl border border-[#ECE8F3] p-3.5 text-sm bg-white focus:outline-none focus:ring-4 focus:border-[#3d0a52] focus:ring-[#3d0a52]/15 cursor-pointer"
+                >
+                  <option *ngFor="let r of reasons" [value]="r">
+                    {{ r }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Message Textarea -->
+              <div class="flex flex-col gap-1.5">
+                <label
+                  for="message"
+                  class="text-xs font-bold text-gray-600 uppercase tracking-wider"
+                >
+                  Message <span class="text-rose-500">*</span>
+                </label>
+                <textarea
+                  id="message"
+                  formControlName="message"
+                  rows="4"
+                  placeholder="Tell us what you need help with..."
+                  class="w-full rounded-xl border p-3.5 text-sm transition focus:outline-none focus:ring-4 resize-none"
+                  [class.border-rose-400]="isInvalid('message')"
+                  [class.focus:ring-rose-200]="isInvalid('message')"
+                  [class.border-[#ECE8F3]]="!isInvalid('message')"
+                  [class.focus:border-[#3d0a52]]="!isInvalid('message')"
+                  [class.focus:ring-[#3d0a52]/15]="!isInvalid('message')"
+                ></textarea>
+                <span
+                  *ngIf="isInvalid('message')"
+                  class="text-xs text-rose-500 font-medium"
+                >
+                  Please write a message of at least 10 characters.
+                </span>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="pt-2">
+                <button
+                  type="submit"
+                  [disabled]="isLoading() || contactForm.invalid"
+                  class="w-full flex h-12 items-center justify-center gap-2 font-medium text-white bg-[#3d0a52] rounded-2xl shadow-lg shadow-[#3d0a52]/25 transition duration-300 hover:-translate-y-0.5 hover:bg-[#4d1368] hover:shadow-xl hover:shadow-[#4d1368]/30 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none cursor-pointer text-lg"
+                >
+                  <div
+                    *ngIf="isLoading()"
+                    class="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
+                  ></div>
+                  <span>{{ isLoading() ? 'Sending Message...' : 'Submit Message' }}</span>
+                </button>
+              </div>
+            </form>
           </div>
-
-          <h3 class="font-semibold text-slate-900">
-            For inquiries about our AI Glasses Meta collection
-          </h3>
         </div>
+      </main>
 
-        <p class="text-sm text-slate-700">
-          Call 0123456789 Sunday - Thursday: 9:00am - 5:00pm
-        </p>
-
-        <p class="text-sm text-slate-700 mt-1">
-          Saturday: 9:00am - 5:00pm (Phone only)
-        </p>
-
-        <p class="text-sm text-slate-700 mt-1">Friday: CLOSED</p>
-      </article>
-
-      <!-- Card 4 -->
-      <article class="flex flex-col bg-slate-100 p-6 rounded-sm">
-        <div class="flex items-start gap-3 mb-4">
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg">
-            <i class="fa-solid fa-inbox fa-2xl"></i>
+      <!-- Right Side: Existing Support Cards Grid (Span 5) -->
+      <aside class="lg:col-span-5 space-y-6">
+        <!-- Card 1: Got Questions -->
+        <article
+          class="flex flex-col bg-white p-6 rounded-2xl border border-[#ECE8F3] hover:border-[#3d0a52]/20 hover:shadow-md transition duration-300 relative overflow-hidden group"
+        >
+          <div class="flex items-start gap-4">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#3d0a52]/8 text-[#3d0a52] group-hover:scale-110 transition duration-300"
+            >
+              <i class="fa-solid fa-envelope fa-xl"></i>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-[#2D2340]">Got questions?</h3>
+              <p class="text-xs text-[#A376A2] font-bold uppercase tracking-wider mt-0.5">
+                We’ve got answers.
+              </p>
+              <p class="text-sm text-gray-500 mt-2.5 leading-relaxed">
+                Click here to email us, or live chat with us.
+              </p>
+            </div>
           </div>
+        </article>
 
-          <h3 class="font-semibold text-slate-900">Social Concierge Team</h3>
-        </div>
-
-        <p class="text-sm text-slate-700">
-          DM us on Instagram, Facebook, or Twitter.
-        </p>
-
-        <p class="text-sm text-slate-700 mt-1">
-          Our Social Concierge Team is ready to assist you!
-        </p>
-      </article>
-
-      <!-- Card 5 -->
-      <article class="flex flex-col bg-slate-100 p-6 rounded-sm">
-        <div class="flex items-start gap-3 mb-4">
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg">
-            <i class="fa-solid fa-truck-fast fa-2xl"></i>
+        <!-- Card 2: Hours -->
+        <article
+          class="flex flex-col bg-white p-6 rounded-2xl border border-[#ECE8F3] hover:border-[#3d0a52]/20 hover:shadow-md transition duration-300 relative overflow-hidden group"
+        >
+          <div class="flex items-start gap-4">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#3d0a52]/8 text-[#3d0a52] group-hover:scale-110 transition duration-300"
+            >
+              <i class="fa-regular fa-message fa-flip-horizontal fa-xl"></i>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-[#2D2340]">Customer service hours</h3>
+              <div class="text-sm text-gray-500 mt-3 space-y-1 font-medium">
+                <p>Sunday - Thursday: 9:00am - 5:00pm</p>
+                <p class="text-gray-400">Friday - Sunday: CLOSED</p>
+              </div>
+            </div>
           </div>
+        </article>
 
-          <h3 class="font-semibold text-slate-900">Shipping</h3>
-        </div>
-
-        <p class="text-sm text-slate-700">
-          We offer Free Standard Shipping with delivery within 15 business days.
-        </p>
-        <p class="text-sm text-slate-700">
-          Need your order faster? Choose one of our express options:
-        </p>
-
-        <ul class="list-disc pl-5 text-sm text-slate-700 mt-2 space-y-1">
-          <li><b>Fast Delivery</b> for EGP 50 within 5 business days.</li>
-          <li><b>Next-Day Delivery</b> for EGP 100 within 1 business day.</li>
-        </ul>
-      </article>
-
-      <!-- Card 6 -->
-      <article class="flex flex-col bg-slate-100 p-6 rounded-sm">
-        <div class="flex items-start gap-3 mb-4">
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg">
-            <i class="fa-solid fa-box-archive fa-2xl"></i>
+        <!-- Card 3: Inquiries -->
+        <article
+          class="flex flex-col bg-white p-6 rounded-2xl border border-[#ECE8F3] hover:border-[#3d0a52]/20 hover:shadow-md transition duration-300 relative overflow-hidden group"
+        >
+          <div class="flex items-start gap-4">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#3d0a52]/8 text-[#3d0a52] group-hover:scale-110 transition duration-300"
+            >
+              <i class="fa-solid fa-phone-volume fa-xl"></i>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-[#2D2340]">
+                For inquiries about our AI Glasses Meta collection
+              </h3>
+              <div class="text-sm text-gray-500 mt-3 space-y-1 font-medium">
+                <p>Call 0123456789 Sunday - Thursday: 9:00am - 5:00pm</p>
+                <p>Saturday: 9:00am - 5:00pm (Phone only)</p>
+                <p class="text-gray-400">Friday: CLOSED</p>
+              </div>
+            </div>
           </div>
+        </article>
 
-          <h3 class="font-semibold text-slate-900">Returns</h3>
-        </div>
+        <!-- Card 4: Social -->
+        <article
+          class="flex flex-col bg-white p-6 rounded-2xl border border-[#ECE8F3] hover:border-[#3d0a52]/20 hover:shadow-md transition duration-300 relative overflow-hidden group"
+        >
+          <div class="flex items-start gap-4">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#3d0a52]/8 text-[#3d0a52] group-hover:scale-110 transition duration-300"
+            >
+              <i class="fa-solid fa-inbox fa-xl"></i>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-[#2D2340]">Social Concierge Team</h3>
+              <div class="text-sm text-gray-500 mt-3 space-y-1 font-medium">
+                <p>DM us on Instagram, Facebook, or Twitter.</p>
+                <p class="text-[#3d0a52] font-semibold">Our Social Concierge Team is ready to assist you!</p>
+              </div>
+            </div>
+          </div>
+        </article>
 
-        <p class="text-sm text-slate-700">
-          You can return your glasses within 60 days of receiving your product
-          with free return shipping. First fill out the return request form. You
-          will receive a prepaid shipping label or update on your request within
-          48 hours. Print the shipping label, pack it in the original packaging,
-          add the shipping label and send it off.Once we’ve received your
-          undamaged return, we’ll refund you in 7-10 days back to the original
-          form of payment.
-        </p>
-      </article>
+        <!-- Card 5: Shipping -->
+        <article
+          class="flex flex-col bg-white p-6 rounded-2xl border border-[#ECE8F3] hover:border-[#3d0a52]/20 hover:shadow-md transition duration-300 relative overflow-hidden group"
+        >
+          <div class="flex items-start gap-4">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#3d0a52]/8 text-[#3d0a52] group-hover:scale-110 transition duration-300"
+            >
+              <i class="fa-solid fa-truck-fast fa-xl"></i>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-[#2D2340]">Shipping Info</h3>
+              <p class="text-sm text-gray-500 mt-3 leading-relaxed">
+                We offer Free Standard Shipping with delivery within 15 business days. Need your order faster?
+              </p>
+              <ul class="list-disc pl-5 text-xs text-gray-500 mt-3 space-y-1.5 font-medium">
+                <li>
+                  <strong class="text-[#2D2340]">Fast Delivery</strong> for EGP 50 within 5 business days.
+                </li>
+                <li>
+                  <strong class="text-[#2D2340]">Next-Day Delivery</strong> for EGP 100 within 1 business day.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 6: Returns -->
+        <article
+          class="flex flex-col bg-white p-6 rounded-2xl border border-[#ECE8F3] hover:border-[#3d0a52]/20 hover:shadow-md transition duration-300 relative overflow-hidden group"
+        >
+          <div class="flex items-start gap-4">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#3d0a52]/8 text-[#3d0a52] group-hover:scale-110 transition duration-300"
+            >
+              <i class="fa-solid fa-box-archive fa-xl"></i>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-[#2D2340]">Returns & Refunds</h3>
+              <p class="text-sm text-gray-500 mt-3 leading-relaxed">
+                You can return your glasses within 60 days of receiving your product with free return shipping. First, fill out the return request form. You will receive a prepaid shipping label or update on your request within 48 hours. Print the shipping label, pack it in the original packaging, add the shipping label and send it off. Once we’ve received your undamaged return, we’ll refund you in 7-10 days back to the original form of payment.
+              </p>
+            </div>
+          </div>
+        </article>
+      </aside>
     </div>
   </div>
 </section>

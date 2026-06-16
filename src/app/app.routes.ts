@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { AuthLayoutComponent } from './core/layouts/auth-layout/auth-layout.component';
 import { BlankLayoutComponent } from './core/layouts/blank-layout/blank-layout.component';
 import { LoginComponent } from './core/auth/login/login.component';
-import { RegisterComponent } from './core/auth/register/register.component';
+
 import { ForgotPasswordComponent } from './core/auth/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './core/auth/reset-password/reset-password.component';
 import { HomeComponent } from './features/home/home.component';
@@ -15,6 +15,7 @@ import { NotFoundComponent } from './features/not-found/not-found.component';
 import { ProductsComponent } from './pages/products/products.component';
 import { CartPageComponent } from './features/cart/pages/cart-page.component';
 import { CheckoutPageComponent } from './features/checkout/pages/checkout-page.component';
+import { ProfileComponent } from './features/profile/profile.component';
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
 
@@ -25,7 +26,7 @@ export const routes: Routes = [
       { path: 'login', component: LoginComponent, title: 'Login Page' },
       {
         path: 'register',
-        component: RegisterComponent,
+        component: LoginComponent,
         title: 'Register Page',
       },
       {
@@ -77,6 +78,11 @@ export const routes: Routes = [
         path: 'checkout',
         component: CheckoutPageComponent,
         title: 'Checkout Page',
+      },
+      {
+        path: 'profile',
+        component: ProfileComponent,
+        title: 'Profile Page',
       },
     ],
   },

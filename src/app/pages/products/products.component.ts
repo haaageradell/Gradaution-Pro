@@ -128,6 +128,8 @@ export class ProductsComponent implements OnInit {
       oldPrice,
       rating,
       image,
+      mediaUrl: product?.mediaUrl || '',
+      twoDImageUrl: product?.twoDImageUrl || '',
     };
   }
 

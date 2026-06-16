@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 import { ToastrService } from 'ngx-toastr';
 
@@ -10,6 +11,8 @@ export interface ProductItem {
   oldPrice: number;
   rating: number;
   image: string;
+  mediaUrl?: string;
+  twoDImageUrl?: string;
 }
 
 @Component({
@@ -24,6 +27,7 @@ export class ProductCardComponent {
 
   private readonly cartService = inject(CartService);
   private readonly toastr = inject(ToastrService);
+  private readonly router = inject(Router);
 
   wished = false;
   isAdding = false;
@@ -75,12 +79,28 @@ export class ProductCardComponent {
         });
         this.isAdding = false;
       },
-
       error: (error) => {
         console.error('Add to cart error:', error);
-
         this.isAdding = false;
       },
+    });
+  }
+
+  tryOn(): void {
+    if (!this.product?.id) {
+      return;
+    }
+
+    this.router.navigate(['/try'], {
+      queryParams: {
+        id: this.product.id,
+        mediaUrl: this.product.mediaUrl || ''
+      },
+      state: {
+        product: this.product,
+        productId: this.product.id,
+        mediaUrl: this.product.mediaUrl || ''
+      }
     });
   }
 }
