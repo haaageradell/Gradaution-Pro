@@ -11,7 +11,7 @@ import {
   signal,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { EMPTY, Subject, catchError, finalize, takeUntil } from 'rxjs';
+import { EMPTY, Subject, catchError, finalize, switchMap, takeUntil } from 'rxjs';
 import { OrderSummary } from '../../../core/models/order.model';
 import { OrderService } from '../../../core/services/order.service';
 import { OrderDetailModalComponent } from '../../orders/components/order-detail-modal.component';
@@ -42,6 +42,9 @@ export class ProfileOrdersTabComponent implements OnInit, OnDestroy {
   loadError = signal<string | null>(null);
   orders = signal<OrderSummary[]>([]);
   selectedOrderId = signal<string | null>(null);
+  orderToCancelId = signal<string | null>(null);
+  isCancelConfirmOpen = signal(false);
+  cancellingOrderId = signal<string | null>(null);
 
   profileStats = computed(() =>
     this.orderService.computeProfileStats(this.orders()),
@@ -91,6 +94,55 @@ export class ProfileOrdersTabComponent implements OnInit, OnDestroy {
 
   closeDetails(): void {
     this.selectedOrderId.set(null);
+  }
+
+  openCancelConfirm(orderId: string): void {
+    this.orderToCancelId.set(orderId);
+    this.isCancelConfirmOpen.set(true);
+  }
+
+  closeCancelConfirm(): void {
+    if (this.cancellingOrderId()) {
+      return;
+    }
+    this.isCancelConfirmOpen.set(false);
+    this.orderToCancelId.set(null);
+  }
+
+  confirmCancelOrder(): void {
+    const orderId = this.orderToCancelId();
+    if (!orderId || this.cancellingOrderId() === orderId) {
+      return;
+    }
+
+    this.cancellingOrderId.set(orderId);
+    this.orderService
+      .cancelOrder(orderId)
+      .pipe(
+        switchMap(() => this.orderService.refreshOrders()),
+        catchError((err: HttpErrorResponse) => {
+          console.error('[ProfileOrdersTab] cancelOrder error:', err);
+          const message = this.orderService.getErrorMessage(
+            err,
+            'Could not cancel order. Please try again.',
+          );
+          this.toastr.error(message, 'My Orders', {
+            positionClass: 'toast-bottom-right',
+          });
+          return EMPTY;
+        }),
+        finalize(() => this.cancellingOrderId.set(null)),
+        takeUntil(this.destroy$),
+      )
+      .subscribe({
+        next: () => {
+          this.isCancelConfirmOpen.set(false);
+          this.orderToCancelId.set(null);
+          this.toastr.success('Order cancelled successfully', 'My Orders', {
+            positionClass: 'toast-bottom-right',
+          });
+        },
+      });
   }
 
   retryLoad(): void {

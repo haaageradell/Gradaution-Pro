@@ -3,6 +3,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import {
   OrderStatus,
   OrderSummary,
+  canCancelOrder,
   orderStatusBadgeClass,
 } from '../../../core/models/order.model';
 import {
@@ -78,6 +79,19 @@ import {
             >
               Track Order
             </button>
+            <button
+              *ngIf="enableCancel && canCancel(order.status)"
+              type="button"
+              (click)="cancelOrder.emit(order.id)"
+              [disabled]="cancellingOrderId === order.id"
+              class="rounded-xl border border-red-200 px-4 py-2 text-xs font-bold text-red-600 transition hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 flex items-center gap-1.5"
+            >
+              <i
+                *ngIf="cancellingOrderId === order.id"
+                class="fa-solid fa-circle-notch fa-spin"
+              ></i>
+              <span>Cancel Order</span>
+            </button>
           </div>
         </div>
       </div>
@@ -130,12 +144,16 @@ import {
 })
 export class OrderPreviewCardComponent {
   @Input({ required: true }) order!: OrderSummary;
+  @Input() enableCancel = false;
+  @Input() cancellingOrderId: string | null = null;
   @Output() viewDetails = new EventEmitter<string>();
   @Output() trackOrder = new EventEmitter<string>();
+  @Output() cancelOrder = new EventEmitter<string>();
 
   formatDate = formatOrderDate;
   formatMoney = formatOrderMoney;
   itemLabel = formatOrderItemLabel;
+  canCancel = canCancelOrder;
 
   statusClass(status: OrderStatus): string {
     return orderStatusBadgeClass(status);

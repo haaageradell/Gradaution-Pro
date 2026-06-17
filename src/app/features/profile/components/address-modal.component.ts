@@ -1,9 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { UserAddress } from '../../../core/models/profile.models';
-
-const PHONE_PATTERN = /^[+\d][\d\s-]{7,14}$/;
+import { CreateAddressRequest, UserAddress } from '../../../core/models/profile.models';
 
 @Component({
   selector: 'app-address-modal',
@@ -40,40 +38,21 @@ const PHONE_PATTERN = /^[+\d][\d\s-]{7,14}$/;
 
         <!-- Body -->
         <form [formGroup]="addressForm" (ngSubmit)="onSubmit()" class="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
-          <!-- Full Name -->
+          <!-- Country -->
           <div class="flex flex-col gap-1.5">
-            <label for="fullName" class="text-xs font-bold text-[#5A4F73]">Full Name</label>
+            <label for="country" class="text-xs font-bold text-[#5A4F73]">Country</label>
             <input
-              id="fullName"
+              id="country"
               type="text"
-              formControlName="fullName"
-              placeholder="e.g. John Doe"
+              formControlName="country"
+              placeholder="e.g. Egypt"
               class="w-full px-4 py-2.5 rounded-xl border bg-[#F8F6FA] text-sm text-[#2D2340] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4B1D5A]/20 transition"
               [ngClass]="{
-                'border-red-400 focus:ring-red-100': hasError('fullName'),
-                'border-[#ECE8F3] focus:border-[#4B1D5A]': !hasError('fullName')
+                'border-red-400 focus:ring-red-100': hasError('country'),
+                'border-[#ECE8F3] focus:border-[#4B1D5A]': !hasError('country')
               }"
             />
-            <span *ngIf="getErrorMessage('fullName') as msg" class="text-xs text-red-500 font-medium">
-              {{ msg }}
-            </span>
-          </div>
-
-          <!-- Phone Number -->
-          <div class="flex flex-col gap-1.5">
-            <label for="modalPhoneNumber" class="text-xs font-bold text-[#5A4F73]">Phone Number</label>
-            <input
-              id="modalPhoneNumber"
-              type="text"
-              formControlName="phoneNumber"
-              placeholder="e.g. +20 10 12345678"
-              class="w-full px-4 py-2.5 rounded-xl border bg-[#F8F6FA] text-sm text-[#2D2340] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4B1D5A]/20 transition"
-              [ngClass]="{
-                'border-red-400 focus:ring-red-100': hasError('phoneNumber'),
-                'border-[#ECE8F3] focus:border-[#4B1D5A]': !hasError('phoneNumber')
-              }"
-            />
-            <span *ngIf="getErrorMessage('phoneNumber') as msg" class="text-xs text-red-500 font-medium">
+            <span *ngIf="getErrorMessage('country') as msg" class="text-xs text-red-500 font-medium">
               {{ msg }}
             </span>
           </div>
@@ -117,37 +96,24 @@ const PHONE_PATTERN = /^[+\d][\d\s-]{7,14}$/;
               </span>
             </div>
 
-            <!-- Building -->
+            <!-- Building No. -->
             <div class="flex flex-col gap-1.5">
-              <label for="building" class="text-xs font-bold text-[#5A4F73]">Building No.</label>
+              <label for="buildingNo" class="text-xs font-bold text-[#5A4F73]">Building No.</label>
               <input
-                id="building"
+                id="buildingNo"
                 type="text"
-                formControlName="building"
+                formControlName="buildingNo"
                 placeholder="e.g. 14B"
                 class="w-full px-4 py-2.5 rounded-xl border bg-[#F8F6FA] text-sm text-[#2D2340] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4B1D5A]/20 transition"
                 [ngClass]="{
-                  'border-red-400 focus:ring-red-100': hasError('building'),
-                  'border-[#ECE8F3] focus:border-[#4B1D5A]': !hasError('building')
+                  'border-red-400 focus:ring-red-100': hasError('buildingNo'),
+                  'border-[#ECE8F3] focus:border-[#4B1D5A]': !hasError('buildingNo')
                 }"
               />
-              <span *ngIf="getErrorMessage('building') as msg" class="text-xs text-red-500 font-medium">
+              <span *ngIf="getErrorMessage('buildingNo') as msg" class="text-xs text-red-500 font-medium">
                 {{ msg }}
               </span>
             </div>
-          </div>
-
-          <!-- Set as Default -->
-          <div class="flex items-center gap-3 mt-2">
-            <input
-              id="isDefault"
-              type="checkbox"
-              formControlName="isDefault"
-              class="w-4.5 h-4.5 rounded text-[#4B1D5A] border-[#ECE8F3] focus:ring-[#4B1D5A] transition"
-            />
-            <label for="isDefault" class="text-xs font-semibold text-[#5A4F73] select-none cursor-pointer">
-              Set as default shipping address
-            </label>
           </div>
 
           <!-- Actions -->
@@ -185,12 +151,10 @@ export class AddressModalComponent implements OnChanges {
 
   constructor(private fb: FormBuilder) {
     this.addressForm = this.fb.group({
-      fullName: ['', [Validators.required, Validators.minLength(3)]],
-      phoneNumber: ['', [Validators.required, Validators.pattern(PHONE_PATTERN)]],
+      country: ['', [Validators.required, Validators.minLength(2)]],
       city: ['', [Validators.required, Validators.minLength(2)]],
-      street: ['', [Validators.required, Validators.minLength(2)]],
-      building: ['', [Validators.required, Validators.minLength(1)]],
-      isDefault: [false],
+      street: ['', [Validators.required, Validators.minLength(3)]],
+      buildingNo: ['', [Validators.required]],
     });
   }
 
@@ -206,21 +170,17 @@ export class AddressModalComponent implements OnChanges {
   resetForm(): void {
     if (this.address) {
       this.addressForm.patchValue({
-        fullName: this.address.fullName,
-        phoneNumber: this.address.phoneNumber,
+        country: this.address.country,
         city: this.address.city,
         street: this.address.street,
-        building: this.address.building,
-        isDefault: this.address.isDefault,
+        buildingNo: this.address.buildingNo,
       });
     } else {
       this.addressForm.reset({
-        fullName: '',
-        phoneNumber: '',
+        country: '',
         city: '',
         street: '',
-        building: '',
-        isDefault: false,
+        buildingNo: '',
       });
     }
     this.addressForm.markAsPristine();
@@ -240,11 +200,10 @@ export class AddressModalComponent implements OnChanges {
 
     const errors = control.errors;
     const labels: Record<string, string> = {
-      fullName: 'Full name',
-      phoneNumber: 'Phone number',
+      country: 'Country',
       city: 'City',
       street: 'Street',
-      building: 'Building number',
+      buildingNo: 'Building number',
     };
     const label = labels[controlName] ?? 'This field';
 
@@ -253,12 +212,6 @@ export class AddressModalComponent implements OnChanges {
     }
     if (errors['minlength']) {
       return `${label} must be at least ${errors['minlength'].requiredLength} characters.`;
-    }
-    if (errors['pattern']) {
-      if (controlName === 'phoneNumber') {
-        return 'Please enter a valid phone number (8–15 digits, may include +, spaces, or dashes).';
-      }
-      return `Please enter a valid ${label.toLowerCase()}.`;
     }
     return 'Please enter a valid value.';
   }
@@ -274,14 +227,16 @@ export class AddressModalComponent implements OnChanges {
     }
 
     const formValue = this.addressForm.getRawValue();
-    const result: UserAddress = {
-      id: this.address?.id,
-      fullName: String(formValue.fullName ?? '').trim(),
-      phoneNumber: String(formValue.phoneNumber ?? '').trim(),
+    const payload: CreateAddressRequest = {
+      country: String(formValue.country ?? '').trim(),
       city: String(formValue.city ?? '').trim(),
       street: String(formValue.street ?? '').trim(),
-      building: String(formValue.building ?? '').trim(),
-      isDefault: !!formValue.isDefault,
+      buildingNo: String(formValue.buildingNo ?? '').trim(),
+    };
+
+    const result: UserAddress = {
+      id: this.address?.id,
+      ...payload,
     };
     this.save.emit(result);
   }

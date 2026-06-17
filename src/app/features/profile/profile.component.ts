@@ -132,7 +132,7 @@ export class ProfileComponent implements OnInit {
         console.error('Failed to load addresses:', err);
         this.addressesLoading = false;
         this.addressesError = true;
-        this.toastr.error('Failed to load addresses.');
+        this.toastr.error(err.message || 'Failed to load addresses.');
       },
     });
   }
@@ -148,15 +148,26 @@ export class ProfileComponent implements OnInit {
   }
 
   onSaveAddress(address: UserAddress): void {
-    if (!address.fullName || !address.phoneNumber || !address.city || !address.street || !address.building) {
+    if (
+      !address.country?.trim() ||
+      !address.city?.trim() ||
+      !address.street?.trim() ||
+      !address.buildingNo?.trim()
+    ) {
       this.toastr.warning('Please fill in all required address fields correctly.');
       return;
     }
 
+    const payload: UserAddress = {
+      country: address.country.trim(),
+      city: address.city.trim(),
+      street: address.street.trim(),
+      buildingNo: address.buildingNo.trim(),
+    };
+
     this.addressSaving = true;
     if (address.id) {
-      // Edit mode
-      this.profileService.updateAddress(address.id, address).subscribe({
+      this.profileService.updateAddress(address.id, { ...payload }).subscribe({
         next: () => {
           this.addressSaving = false;
           this.isAddressModalOpen = false;
@@ -169,8 +180,7 @@ export class ProfileComponent implements OnInit {
         },
       });
     } else {
-      // Add mode
-      this.profileService.addAddress(address).subscribe({
+      this.profileService.addAddress({ ...payload }).subscribe({
         next: () => {
           this.addressSaving = false;
           this.isAddressModalOpen = false;

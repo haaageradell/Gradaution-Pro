@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { UserAddress, UserProfile } from '../models/profile.models';
+import { CreateAddressRequest, UserAddress, UserProfile } from '../models/profile.models';
 
 @Injectable({
   providedIn: 'root',
@@ -36,19 +36,24 @@ export class ProfileService {
   }
 
   /** POST /api/Profile/addresses */
-  addAddress(address: UserAddress): Observable<UserAddress> {
-    return this.http.post<unknown>(`${this.profileBaseUrl}/addresses`, address).pipe(
-      map((res) => this.extractAddress(res)),
-      catchError((err) => this.handleError(err))
-    );
+  addAddress(address: CreateAddressRequest): Observable<UserAddress> {
+    return this.http
+      .post<unknown>(`${this.profileBaseUrl}/addresses`, this.toAddressBody(address))
+      .pipe(
+        map((res) => this.extractAddress(res)),
+        catchError((err) => this.handleError(err)),
+      );
   }
 
   /** PUT /api/Profile/addresses/{addressId} */
-  updateAddress(addressId: string, address: UserAddress): Observable<UserAddress> {
+  updateAddress(
+    addressId: string,
+    address: CreateAddressRequest,
+  ): Observable<UserAddress> {
     const url = `${this.profileBaseUrl}/addresses/${encodeURIComponent(addressId)}`;
-    return this.http.put<unknown>(url, address).pipe(
+    return this.http.put<unknown>(url, this.toAddressBody(address)).pipe(
       map((res) => this.extractAddress(res)),
-      catchError((err) => this.handleError(err))
+      catchError((err) => this.handleError(err)),
     );
   }
 
@@ -96,16 +101,29 @@ export class ProfileService {
 
   private extractAddress(res: unknown): UserAddress {
     const data = this.unwrapPayload(res);
+    const idRaw =
+      data['id'] ?? data['Id'] ?? data['addressId'] ?? data['AddressId'];
     return {
-      id: data['id'] || data['Id'] || data['addressId'] || data['AddressId']
-        ? String(data['id'] ?? data['Id'] ?? data['addressId'] ?? data['AddressId'])
-        : undefined,
-      fullName: String(data['fullName'] ?? data['FullName'] ?? ''),
-      phoneNumber: String(data['phoneNumber'] ?? data['PhoneNumber'] ?? ''),
+      id: idRaw != null && String(idRaw).trim() !== '' ? String(idRaw) : undefined,
+      country: String(data['country'] ?? data['Country'] ?? ''),
       city: String(data['city'] ?? data['City'] ?? ''),
       street: String(data['street'] ?? data['Street'] ?? ''),
-      building: String(data['building'] ?? data['Building'] ?? ''),
-      isDefault: Boolean(data['isDefault'] ?? data['IsDefault'] ?? false),
+      buildingNo: String(
+        data['buildingNo'] ??
+          data['BuildingNo'] ??
+          data['building'] ??
+          data['Building'] ??
+          '',
+      ),
+    };
+  }
+
+  private toAddressBody(address: CreateAddressRequest): CreateAddressRequest {
+    return {
+      country: address.country.trim(),
+      city: address.city.trim(),
+      street: address.street.trim(),
+      buildingNo: address.buildingNo.trim(),
     };
   }
 

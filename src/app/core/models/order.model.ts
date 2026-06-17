@@ -16,6 +16,9 @@ export const ORDER_STATUSES: OrderStatus[] = [
   'Cancelled',
 ];
 
+/** Status value sent to PUT /api/Order/{orderId}/status when cancelling. */
+export const ORDER_CANCELLED_STATUS: OrderStatus = 'Cancelled';
+
 export interface OrderLineItem {
   id: string;
   productId: number;
@@ -149,5 +152,16 @@ export function orderStatusBadgeClass(status: OrderStatus): string {
       return 'order-status--cancelled';
     default:
       return 'order-status--default';
+  }
+}
+
+/** Orders that can still be cancelled by the customer (Profile Orders). */
+export function canCancelOrder(status: OrderStatus): boolean {
+  switch (normalizeOrderStatus(status)) {
+    case 'Pending':
+    case 'Processing':
+      return true;
+    default:
+      return false;
   }
 }

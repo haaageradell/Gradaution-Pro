@@ -6,14 +6,17 @@ export interface UserProfile {
   dateOfBirth?: string;
 }
 
-export interface UserAddress {
-  id?: string;
-  fullName: string;
-  phoneNumber: string;
+/** POST/PUT /api/Profile/addresses — matches CreateAddressDto (Swagger). */
+export interface CreateAddressRequest {
+  country: string;
   city: string;
   street: string;
-  building: string;
-  isDefault: boolean;
+  buildingNo: string;
+}
+
+/** Address returned from GET /api/Profile/addresses (id + CreateAddressDto fields). */
+export interface UserAddress extends CreateAddressRequest {
+  id?: string;
 }
 
 export interface OrderPlaceholder {

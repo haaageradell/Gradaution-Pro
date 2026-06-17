@@ -12,7 +12,8 @@ import {
   throwError,
 } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import type {
+import {
+  ORDER_CANCELLED_STATUS,
   ApplyCouponRequest,
   CreateOrderRequest,
   OrderDetail,
@@ -113,6 +114,13 @@ export class OrderService {
         return throwError(() => err);
       }),
     );
+  }
+
+  /** Cancel order — PUT /api/Order/{orderId}/status with status Cancelled */
+  cancelOrder(orderId: string): Observable<unknown> {
+    return this.updateOrderStatus(orderId, {
+      status: ORDER_CANCELLED_STATUS,
+    });
   }
 
   /** POST /api/Order/{orderId}/coupon */
@@ -224,7 +232,10 @@ export class OrderService {
     };
   }
 
-  getErrorMessage(err: unknown): string {
+  getErrorMessage(
+    err: unknown,
+    fallback = 'Something went wrong while loading orders.',
+  ): string {
     if (err instanceof HttpErrorResponse) {
       if (err.status === 401) {
         return 'Please sign in to view your orders.';
@@ -246,9 +257,9 @@ export class OrderService {
           return msg;
         }
       }
-      return 'Something went wrong while loading orders.';
+      return fallback;
     }
-    return 'Something went wrong while loading orders.';
+    return fallback;
   }
 }
 
