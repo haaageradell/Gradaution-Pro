@@ -42,6 +42,13 @@
 
   <!-- Content -->
   <div class="space-y-2 px-4 pb-4 pt-4">
+    <p
+      *ngIf="product.brandName"
+      class="text-[10px] font-bold uppercase tracking-[0.18em] text-[#3d0a52]"
+    >
+      {{ product.brandName }}
+    </p>
+
     <!-- Product Name -->
     <h3
       class="line-clamp-1 text-[16px] font-semibold leading-[1.3] text-[#241b35]"

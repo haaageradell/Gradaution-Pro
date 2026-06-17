@@ -37,4 +37,8 @@ export interface SharedProductCardItem {
   oldPrice?: number;
 
   rating?: number;
+
+  brandId?: number;
+
+  brandName?: string;
 }

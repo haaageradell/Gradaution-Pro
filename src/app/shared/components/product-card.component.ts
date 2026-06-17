@@ -6,6 +6,10 @@ export interface SharedProductCardItem {
   name: string;
   image: string;
   price: number;
+  oldPrice?: number;
+  rating?: number;
+  brandId?: number;
+  brandName?: string;
 }
 
 @Component({
@@ -21,7 +25,13 @@ export interface SharedProductCardItem {
         [alt]="product.name"
         class="h-44 w-full rounded-xl bg-[#F6F3FA] object-contain p-2"
       />
-      <h3 class="mt-3 text-sm font-semibold text-[#2D2340]">{{ product.name }}</h3>
+      <p
+        *ngIf="product.brandName"
+        class="text-[10px] font-bold uppercase tracking-[0.18em] text-[#3d0a52]"
+      >
+        {{ product.brandName }}
+      </p>
+      <h3 class="mt-1 text-sm font-semibold text-[#2D2340]">{{ product.name }}</h3>
       <p class="mt-2 text-lg font-bold text-[#2D2340]">
         {{ product.price | currency: 'EGP ' : 'symbol' : '1.0-0' }}
       </p>

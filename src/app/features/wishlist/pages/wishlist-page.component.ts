@@ -10,8 +10,20 @@ import {
   inject,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { EMPTY, Subject, catchError, finalize, takeUntil } from 'rxjs';
-import { WishlistItem, WishlistService } from '../../../core/services/wishlist.service';
+import {
+  EMPTY,
+  Subject,
+  catchError,
+  finalize,
+  map,
+  switchMap,
+  takeUntil,
+} from 'rxjs';
+import { BrandService } from '../../../core/services/brand.service';
+import {
+  WishlistItem,
+  WishlistService,
+} from '../../../core/services/wishlist.service';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
@@ -25,6 +37,7 @@ export class WishlistPageComponent implements OnInit, OnDestroy {
   @Input() embedded = false;
 
   private readonly wishlistService = inject(WishlistService);
+  private readonly brandService = inject(BrandService);
   private readonly toastr = inject(ToastrService);
   private readonly destroy$ = new Subject<void>();
   private readonly isBrowser: boolean;
@@ -45,7 +58,14 @@ export class WishlistPageComponent implements OnInit, OnDestroy {
     }
 
     this.wishlistService.wishlistItems$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        switchMap((items) =>
+          this.brandService
+            .getBrandLookupMap()
+            .pipe(map((brandMap) => this.enrichWishlistItems(items, brandMap))),
+        ),
+        takeUntil(this.destroy$),
+      )
       .subscribe((items) => {
         this.wishlistItems = [...items];
       });
@@ -60,7 +80,6 @@ export class WishlistPageComponent implements OnInit, OnDestroy {
       .getWishlist()
       .pipe(
         catchError((error: HttpErrorResponse) => {
-          console.error('[WishlistPage] loadWishlist error:', error);
           this.toastr.error('Could not load wishlist', 'Wishlist', {
             positionClass: 'toast-bottom-right',
           });
@@ -90,7 +109,6 @@ export class WishlistPageComponent implements OnInit, OnDestroy {
       .removeFromWishlist(productId)
       .pipe(
         catchError((error: HttpErrorResponse) => {
-          console.error('[WishlistPage] removeItem error:', error);
           this.toastr.error('Could not remove item from wishlist', 'Wishlist', {
             positionClass: 'toast-bottom-right',
           });
@@ -116,9 +134,22 @@ export class WishlistPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  private enrichWishlistItems(
+    items: WishlistItem[],
+    brandMap: Map<number, string>,
+  ): WishlistItem[] {
+    return items.map((item) => {
+      if (item.brandName || !item.brandId) {
+        return item;
+      }
+
+      const brandName = brandMap.get(item.brandId);
+      const enriched = brandName ? { ...item, brandName } : item;
+      return enriched;
+    });
+  }
+
   private isAuthenticated(): boolean {
-    return (
-      this.isBrowser && Boolean(localStorage.getItem('token')?.trim())
-    );
+    return this.isBrowser && Boolean(localStorage.getItem('token')?.trim());
   }
 }

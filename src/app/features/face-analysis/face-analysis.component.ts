@@ -2,7 +2,8 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, OnDestroy, PLATFORM_ID, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { forkJoin, timer } from 'rxjs';
-import { AiFaceAnalysisService, FaceAnalysisResult } from '../../core/services/ai-face-analysis.service';
+import { FaceAnalysisResult } from '../../core/models/face-analysis.model';
+import { AiService } from '../../core/services/ai.service';
 import { FaceUploadComponent } from './components/face-upload/face-upload.component';
 import { CameraCaptureComponent } from './components/camera-capture/camera-capture.component';
 import { FaceAnalysisResultComponent } from './components/face-analysis-result/face-analysis-result.component';
@@ -45,7 +46,7 @@ export class FaceAnalysisComponent implements OnDestroy {
     'Loading recommendations...',
   ];
 
-  constructor(private readonly faceAnalysisService: AiFaceAnalysisService) {}
+  constructor(private readonly aiService: AiService) {}
 
   ngOnDestroy(): void {
     this.clearMessageInterval();
@@ -120,7 +121,7 @@ export class FaceAnalysisComponent implements OnDestroy {
       this.selectedFile.set(prepared.file);
 
       forkJoin([
-        this.faceAnalysisService.analyzeFace(prepared.file),
+        this.aiService.analyzeFace(prepared.file),
         timer(4000),
       ]).subscribe({
         next: ([result]) => {

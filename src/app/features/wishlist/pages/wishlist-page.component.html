@@ -79,11 +79,19 @@
         </div>
 
         <div class="flex flex-1 flex-col justify-between gap-2 p-4">
-          <h4
-            class="line-clamp-1 text-sm font-bold leading-tight text-[#2D2340]"
-          >
-            {{ item.name }}
-          </h4>
+          <div>
+            <p
+              *ngIf="item.brandName"
+              class="text-[10px] font-bold uppercase tracking-[0.18em] text-[#3d0a52]"
+            >
+              {{ item.brandName }}
+            </p>
+            <h4
+              class="line-clamp-1 text-sm font-bold leading-tight text-[#2D2340]"
+            >
+              {{ item.name }}
+            </h4>
+          </div>
           <div
             class="mt-1 flex items-center justify-between border-t border-[#F6F4F8] pt-1"
           >

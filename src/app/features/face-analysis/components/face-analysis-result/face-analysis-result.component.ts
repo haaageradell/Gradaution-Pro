@@ -2,9 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, Input, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import {
-  AiFaceAnalysisService,
-  FaceAnalysisResult,
-} from '../../../../core/services/ai-face-analysis.service';
+  AiService,
+} from '../../../../core/services/ai.service';
+import { FaceAnalysisResult } from '../../../../core/models/face-analysis.model';
 import { Product } from '../../../../core/models/product.model';
 
 @Component({
@@ -41,10 +41,7 @@ import { Product } from '../../../../core/models/product.model';
               </span>
             </h1>
             <p class="mt-4 text-sm text-gray-500 leading-relaxed">
-              Our remote AI models analyzed your uploaded facial contours,
-              proportions, and bone structures to classify your shape as
-              <strong>{{ result.faceShape }}</strong
-              >.
+              {{ result.faceShapeDescription }}
             </p>
           </div>
 
@@ -115,22 +112,23 @@ import { Product } from '../../../../core/models/product.model';
               class="relative aspect-[4/3] w-full rounded-xl bg-[#F6F3FA] overflow-hidden flex items-center justify-center p-4"
             >
               <img
+                *ngIf="productImage(product)"
                 [src]="productImage(product)"
                 [alt]="product.name"
                 class="max-h-36 max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
                 (error)="handleImageError($event)"
               />
-              <span
-                *ngIf="product.brandName"
-                class="absolute top-2 left-2 bg-[#3d0a52] text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
-              >
-                {{ product.brandName }}
-              </span>
             </div>
 
             <!-- Details -->
             <div class="mt-4 flex-1 flex flex-col justify-between">
               <div>
+                <p
+                  *ngIf="product.brandName"
+                  class="text-[10px] font-bold uppercase tracking-[0.18em] text-[#3d0a52]"
+                >
+                  {{ product.brandName }}
+                </p>
                 <h4
                   class="text-sm font-bold text-[#2D2340] line-clamp-2 hover:text-[#3d0a52] transition-colors leading-tight"
                 >
@@ -145,7 +143,10 @@ import { Product } from '../../../../core/models/product.model';
                 </p>
 
                 <!-- Rating -->
-                <div class="mt-2 flex items-center gap-1">
+                <div
+                  *ngIf="productRating(product) > 0"
+                  class="mt-2 flex items-center gap-1"
+                >
                   <div class="flex text-amber-400">
                     <svg
                       *ngFor="let star of [1, 2, 3, 4, 5]"
@@ -153,9 +154,7 @@ import { Product } from '../../../../core/models/product.model';
                       viewBox="0 0 20 20"
                       fill="currentColor"
                       class="h-3.5 w-3.5"
-                      [class.text-gray-200]="
-                        star > (product.rating || product.averageRating || 5)
-                      "
+                      [class.text-gray-200]="star > productRating(product)"
                     >
                       <path
                         fill-rule="evenodd"
@@ -165,7 +164,7 @@ import { Product } from '../../../../core/models/product.model';
                     </svg>
                   </div>
                   <span class="text-[9px] font-bold text-gray-400">
-                    ({{ product.rating || product.averageRating || '5.0' }})
+                    ({{ productRating(product) }})
                   </span>
                 </div>
               </div>
@@ -197,7 +196,7 @@ import { Product } from '../../../../core/models/product.model';
               </button>
               <button
                 type="button"
-                (click)="viewProduct()"
+                (click)="viewProduct(product)"
                 class="flex-1 py-2 text-xs font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 transition rounded-lg cursor-pointer"
               >
                 View Details
@@ -242,20 +241,19 @@ export class FaceAnalysisResultComponent {
   @Input({ required: true }) imageUrl!: string;
 
   private readonly router = inject(Router);
-  private readonly faceAnalysisService = inject(AiFaceAnalysisService);
-
-  readonly fallbackImage = 'https://picsum.photos/300/200';
+  private readonly aiService = inject(AiService);
 
   productImage(product: Product): string {
-    return (
-      this.faceAnalysisService.resolveProductImage(product) ||
-      this.fallbackImage
-    );
+    return this.aiService.resolveProductImage(product);
+  }
+
+  productRating(product: Product): number {
+    return product.rating ?? product.averageRating ?? 0;
   }
 
   tryOn(product: Product): void {
     // Save state in the service for the Virtual Try-On component
-    this.faceAnalysisService.setTryOnState(this.result, this.imageUrl, product);
+    this.aiService.setTryOnState(this.result, this.imageUrl, product);
     this.router.navigate(['/try'], {
       queryParams: {
         id: product.id,
@@ -269,14 +267,14 @@ export class FaceAnalysisResultComponent {
     });
   }
 
-  viewProduct(): void {
-    this.router.navigate(['/products']);
+  viewProduct(product: Product): void {
+    this.router.navigate(['/products', product.id]);
   }
 
   handleImageError(event: Event): void {
     const target = event.target as HTMLImageElement | null;
     if (target) {
-      target.src = this.fallbackImage;
+      target.style.display = 'none';
     }
   }
 }

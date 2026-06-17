@@ -1,10 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { switchMap } from 'rxjs';
 import {
   ProductCardComponent,
   ProductItem,
 } from '../../components/product-card/product-card.component';
 import { Product, ProductsApiResponse } from '../../core/models/product.model';
+import { BrandService } from '../../core/services/brand.service';
 import { ProductService } from '../../core/services/product.service';
 
 type Category = {
@@ -22,6 +24,7 @@ type Category = {
 })
 export class HomeComponent implements OnInit {
   private readonly productService = inject(ProductService);
+  private readonly brandService = inject(BrandService);
 
   protected featuredProducts: ProductItem[] = [];
 
@@ -39,9 +42,17 @@ export class HomeComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.productService.getAllProducts().subscribe({
-      next: (response) => {
-        const list = this.extractProducts(response)
+    this.productService
+      .getAllProducts()
+      .pipe(
+        switchMap((response) => {
+          const products = this.extractProducts(response);
+          return this.brandService.enrichProducts(products);
+        }),
+      )
+      .subscribe({
+      next: (products) => {
+        const list = products
           .map((p) => this.mapProductToCardItem(p))
           .slice(0, 4);
         this.featuredProducts = list;
@@ -70,6 +81,8 @@ export class HomeComponent implements OnInit {
       image,
       mediaUrl: product?.mediaUrl || '',
       twoDImageUrl: product?.twoDImageUrl || '',
+      brandId: product?.brandId,
+      brandName: product?.brandName,
     };
   }
 

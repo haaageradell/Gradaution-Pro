@@ -2,7 +2,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, Inject, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { catchError, EMPTY, finalize, switchMap } from 'rxjs';
+import { catchError, EMPTY, finalize, map, switchMap } from 'rxjs';
 import {
   CartCoupon,
   CartLineItem,
@@ -14,6 +14,7 @@ import { OrderSummaryComponent } from '../components/order-summary.component';
 import { SimilarProductsComponent } from '../../products/components/similar-products.component';
 import { SharedProductCardItem } from '../../../shared/components/product-card.component';
 import { ProductService } from '../../../core/services/product.service';
+import { BrandService } from '../../../core/services/brand.service';
 import { ToastrService } from 'ngx-toastr';
 @Component({
   selector: 'app-cart-page',
@@ -32,6 +33,7 @@ export class CartPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly isBrowser: boolean;
   private readonly productService = inject(ProductService);
+  private readonly brandService = inject(BrandService);
   private readonly toastr = inject(ToastrService);
 
   constructor(@Inject(PLATFORM_ID) private readonly platformId: object) {
@@ -58,56 +60,49 @@ export class CartPageComponent implements OnInit {
 
       this.getCart();
     } else {
-      console.log('[CartPage] init on server');
+      // console.warn('[CartPage] Not running in a browser environment.');
     }
   }
 
   //
   private loadSimilarProducts(): void {
-    this.productService.getAllProducts().subscribe({
-      next: (response) => {
-        const products = Array.isArray(response)
-          ? response
-          : (response.data ?? []);
+    this.productService
+      .getAllProducts()
+      .pipe(
+        map((response) =>
+          Array.isArray(response) ? response : (response.data ?? []),
+        ),
+        switchMap((products) => this.brandService.enrichProducts(products)),
+      )
+      .subscribe({
+        next: (products) => {
+          this.similarProducts = products
+            .filter(
+              (product) =>
+                !this.cartItems.some(
+                  (cartItem) => cartItem.productId === product.id,
+                ),
+            )
+            .slice(0, 6)
+            .map((product) => ({
+              id: product.id,
+              name: product.name,
+              image:
+                product.thumbnailUrl && product.thumbnailUrl.trim() !== ''
+                  ? product.thumbnailUrl
+                  : 'https://picsum.photos/300/300',
+              price: product.price,
+              oldPrice: product.price + 500,
+              rating: product.averageRating || 0,
+              brandId: product.brandId,
+              brandName: product.brandName,
+            }));
+        },
 
-        this.similarProducts = products
-
-          // استبعاد المنتجات الموجودة في الكارت
-          .filter(
-            (product) =>
-              !this.cartItems.some(
-                (cartItem) => cartItem.productId === product.id,
-              ),
-          )
-
-          // عدد المنتجات
-          .slice(0, 6)
-
-          // تحويل الشكل للكارد
-          .map((product) => ({
-            id: product.id,
-
-            name: product.name,
-
-            image:
-              product.thumbnailUrl && product.thumbnailUrl.trim() !== ''
-                ? product.thumbnailUrl
-                : 'https://picsum.photos/300/300',
-
-            price: product.price,
-
-            oldPrice: product.price + 500,
-
-            rating: product.averageRating || 0,
-          }));
-
-        // console.log('SIMILAR PRODUCTS:', this.similarProducts);
-      },
-
-      error: (error) => {
-        console.error('Failed to load similar products', error);
-      },
-    });
+        error: (error) => {
+          console.error('Failed to load similar products', error);
+        },
+      });
   }
   //
 
@@ -146,7 +141,6 @@ export class CartPageComponent implements OnInit {
               positionClass: 'toast-bottom-right',
             },
           );
-          console.log('[CartPage] cart after quantity update:', cart);
           this.applyCartView(cart);
         },
       });
@@ -174,10 +168,6 @@ export class CartPageComponent implements OnInit {
       });
   }
   applyCoupon(code: string): void {
-    console.log(
-      '[CartPage] applyCoupon (no dedicated Cart coupon route in spec):',
-      code,
-    );
     this.couponMessage =
       'Promotional codes are applied at checkout when your backend supports them.';
   }

@@ -3,13 +3,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subject, catchError, of, takeUntil, finalize } from 'rxjs';
+import { Subject, catchError, of, switchMap, takeUntil, finalize } from 'rxjs';
 import {
   ProductCardComponent,
   ProductItem,
 } from '../../components/product-card/product-card.component';
 import { Product } from '../../core/models/product.model';
 import { ProductService } from '../../core/services/product.service';
+import { BrandService } from '../../core/services/brand.service';
 import {
   ReviewService,
   Review,
@@ -30,6 +31,7 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly productService = inject(ProductService);
+  private readonly brandService = inject(BrandService);
   private readonly reviewService = inject(ReviewService);
   private readonly wishlistService = inject(WishlistService);
   private readonly toastr = inject(ToastrService);
@@ -146,6 +148,9 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     this.productService
       .getProductById(id)
       .pipe(
+        switchMap((product) =>
+          product ? this.brandService.enrichProduct(product) : of(null),
+        ),
         catchError((err: HttpErrorResponse) => {
           this.productError = 'Failed to load product. Please try again.';
           this.isLoadingProduct = false;
@@ -167,6 +172,9 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     this.productService
       .getSimilarProducts(id)
       .pipe(
+        switchMap((products) =>
+          this.brandService.enrichProducts(products ?? []),
+        ),
         catchError((err: HttpErrorResponse) => {
           this.similarError = 'Failed to load similar products.';
           return of([]);
@@ -177,9 +185,7 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
       )
       .subscribe((products) => {
-        this.similarProducts = (products ?? []).map((p) =>
-          this.mapToCardItem(p),
-        );
+        this.similarProducts = products.map((p) => this.mapToCardItem(p));
       });
   }
 
@@ -201,7 +207,6 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
       )
       .subscribe((reviews) => {
-        console.log('Reviews Response:', reviews);
         this.reviews = reviews ?? [];
       });
   }
@@ -387,8 +392,6 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
 
     this.cartService.addToCart(body).subscribe({
       next: (response) => {
-        console.log('Added to cart successfully:', response);
-
         this.cartService.getCart().subscribe({
           next: (cart: any) => {
             this.cartService.updateCartCountFromItems(cart.items);
@@ -403,7 +406,6 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
       },
 
       error: (error) => {
-        console.error('Add to cart error:', error);
         this.isAdding = false;
       },
     });
@@ -441,6 +443,8 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
       image,
       mediaUrl: product.mediaUrl || '',
       twoDImageUrl: product.twoDImageUrl || '',
+      brandId: product.brandId,
+      brandName: product.brandName,
     };
   }
 }

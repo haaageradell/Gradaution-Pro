@@ -14,7 +14,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ProductService } from '../../core/services/product.service';
 import { Product } from '../../core/models/product.model';
-import { AiFaceAnalysisService } from '../../core/services/ai-face-analysis.service';
+import { AiService } from '../../core/services/ai.service';
 
 @Component({
   selector: 'app-try-on',
@@ -27,7 +27,7 @@ export class TryOnComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly productService = inject(ProductService);
-  private readonly faceAnalysisService = inject(AiFaceAnalysisService);
+  private readonly aiService = inject(AiService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly sanitizer = inject(DomSanitizer);
 
@@ -112,7 +112,7 @@ export class TryOnComponent implements OnInit, OnDestroy {
       this.passedProduct = state.product ?? null;
       this.passedProductId = state.productId ?? state.product?.id ?? null;
       this.passedMediaUrl = state.mediaUrl ?? state.product?.mediaUrl ?? null;
-      console.log('[TryOnComponent] Constructor state parsed:', state);
+      // console.log('[TryOnComponent] Constructor state parsed:', state);
     }
   }
 
@@ -128,13 +128,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
 
       this.queryParamsId = id ? Number(id) : null;
       this.queryParamsMediaUrl = mediaUrl ? decodeURIComponent(mediaUrl) : null;
-
-      console.log(
-        '[TryOnComponent] Route parameters updated: id=',
-        this.queryParamsId,
-        'mediaUrl=',
-        this.queryParamsMediaUrl,
-      );
 
       if (this.availableProducts().length > 0) {
         this.initializeSelectedProduct();
@@ -183,35 +176,26 @@ export class TryOnComponent implements OnInit, OnDestroy {
   }
 
   loadCatalog(): void {
-    console.log(
-      '[TryOnComponent] Fetching product catalog from backend API...',
-    );
     this.productService.getAllProducts().subscribe({
       next: (response) => {
         // Log 1: Raw API response
-        console.log('[TryOnComponent] RAW API RESPONSE:', response);
+        // console.log('[TryOnComponent] RAW API RESPONSE:', response);
 
         // Log 2: response.data or response array
         const rawList = Array.isArray(response)
           ? response
           : ((response as any)?.data ?? (response as any)?.Data ?? []);
-        console.log('[TryOnComponent] EXTRACTED response.data/array:', rawList);
 
         // Map and normalize product fields
         const mappedList = rawList.map((p: any) =>
           this.extractProductFields(p),
         );
-        console.log('[TryOnComponent] MAPPED normalized products:', mappedList);
 
         // Filter products to ONLY include those with a valid .glb in the mediaUrl
         const filtered = mappedList.filter((prod: Product) => {
           const mUrl = String(prod.mediaUrl || '').trim();
           return mUrl.toLowerCase().includes('.glb');
         });
-        console.log(
-          '[TryOnComponent] FILTERED products containing mediaUrl:',
-          filtered,
-        );
         this.availableProducts.set(filtered);
 
         if (
@@ -247,7 +231,7 @@ export class TryOnComponent implements OnInit, OnDestroy {
 
   initializeSelectedProduct(): void {
     // Resolve selection sources prioritising face-analysis selection and navigation state
-    const serviceSelected = this.faceAnalysisService.selectedGlasses();
+    const serviceSelected = this.aiService.selectedGlasses();
 
     const id =
       this.queryParamsId ?? this.passedProductId ?? serviceSelected?.id ?? null;
@@ -257,12 +241,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
       serviceSelected?.mediaUrl ??
       null;
     const productObj = this.passedProduct ?? serviceSelected ?? null;
-
-    console.log('[TryOnComponent] INITIALIZING SELECTION:', {
-      id,
-      mediaUrl,
-      hasObj: !!productObj,
-    });
 
     let productToSelect: Product | null = null;
 
@@ -343,14 +321,7 @@ export class TryOnComponent implements OnInit, OnDestroy {
       productToSelect = this.availableProducts()[0];
       this.selectedProduct.set(productToSelect);
       this.selectedModelUrl.set(productToSelect.mediaUrl || null);
-      console.log(
-        '[TryOnComponent] Direct access fallback selected:',
-        productToSelect,
-      );
-      console.log(
-        '[TryOnComponent] SELECTED MODEL URL:',
-        productToSelect.mediaUrl,
-      );
+
       this.checkAndAutoStartPhotoTryOn();
     } else {
       console.log('[TryOnComponent] NO MODEL SELECTED.');
@@ -359,7 +330,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
 
   selectProduct(product: Product): void {
     if (!product) return;
-    console.log('[TryOnComponent] Switching product selection to:', product);
 
     this.selectedProduct.set(product);
     this.selectedModelUrl.set(product.mediaUrl || null);
@@ -433,7 +403,7 @@ export class TryOnComponent implements OnInit, OnDestroy {
     this.errorMessage.set(null);
     this.showSplash.set(false);
 
-    this.faceAnalysisService.tryOnUploadedPhoto(file, glassesUrl).subscribe({
+    this.aiService.tryOnUploadedPhoto(file, glassesUrl).subscribe({
       next: (blob: Blob) => {
         const objectUrl = URL.createObjectURL(blob);
         this.uploadedImageSrc.set(
@@ -474,14 +444,10 @@ export class TryOnComponent implements OnInit, OnDestroy {
 
   checkAndAutoStartPhotoTryOn(): void {
     if (this.hasAutoStartedPhoto) return;
-    const cachedImg = this.faceAnalysisService.uploadedImage();
+    const cachedImg = this.aiService.uploadedImage();
     const product = this.selectedProduct();
     if (cachedImg && product) {
       this.hasAutoStartedPhoto = true;
-      console.log(
-        '[TryOnComponent] Auto-starting photo try-on with cached image and product:',
-        product.name,
-      );
 
       let file: File | null = null;
       if (cachedImg.startsWith('data:')) {
@@ -508,9 +474,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
     }
 
     navigator.mediaDevices.getUserMedia = async (constraints) => {
-      console.log(
-        '[TryOnComponent] MediaDevices.getUserMedia intercepted. Returning canvas stream.',
-      );
       return canvasStream;
     };
   }
@@ -519,7 +482,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
     if (isPlatformBrowser(this.platformId) && this.originalGetUserMedia) {
       navigator.mediaDevices.getUserMedia = this.originalGetUserMedia;
       this.originalGetUserMedia = null;
-      console.log('[TryOnComponent] MediaDevices.getUserMedia restored.');
     }
   }
 
@@ -537,10 +499,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
       const initAR = () => {
         const faceSystem = sceneEl.systems?.['mindar-face-system'];
         if (faceSystem) {
-          console.log(
-            '[TryOnComponent] Initializing MindAR Face System camera...',
-          );
-
           // Register event handlers BEFORE starting faceSystem
           const onArReady = () => {
             console.log('[TryOnComponent] MindAR Face System is ready.');
@@ -568,7 +526,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
             clearTimeout(this.safetyTimeoutId);
           }
           this.safetyTimeoutId = setTimeout(() => {
-            console.warn('[TryOnComponent] AR load safety timeout triggered.');
             if (this.isARStarting()) {
               this.isARStarting.set(false);
               this.checkAndMoveVideo();
@@ -578,9 +535,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
             }
           }, 6000);
         } else {
-          console.error(
-            '[TryOnComponent] mindar-face-system not registered on the scene.',
-          );
           this.isARStarting.set(false);
           this.errorMessage.set('AR initialization error.');
         }
@@ -592,7 +546,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
         sceneEl.addEventListener('loaded', initAR);
       }
     } else {
-      console.error('[TryOnComponent] a-scene element not found in DOM!');
       this.isARStarting.set(false);
       this.errorMessage.set('AR viewer elements are missing.');
     }
@@ -605,7 +558,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
       const video = document.querySelector('body > video') as HTMLVideoElement;
       const container = document.querySelector('.tryon-container');
       if (video && container) {
-        console.log('[TryOnComponent] Moving webcam video inside container.');
         container.appendChild(video);
 
         video.style.position = 'absolute';
@@ -628,9 +580,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
         }
 
         video.onplaying = () => {
-          console.log(
-            '[TryOnComponent] Injected video is actively playing frames.',
-          );
           this.isARStarting.set(false);
         };
       } else {
@@ -644,8 +593,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
     if (!isPlatformBrowser(this.platformId)) {
       return;
     }
-
-    console.log('[TryOnComponent] Tearing down AR session.');
 
     if (this.safetyTimeoutId) {
       clearTimeout(this.safetyTimeoutId);
@@ -711,7 +658,7 @@ export class TryOnComponent implements OnInit, OnDestroy {
   }
 
   onModelLoaded(): void {
-    console.log('[TryOnComponent] 3D Model loaded successfully.');
+    // console.log('[TryOnComponent] 3D Model loaded successfully.');
     this.isModelLoading.set(false);
   }
 

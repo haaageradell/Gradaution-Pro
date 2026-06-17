@@ -20,6 +20,8 @@ export interface WishlistItem {
   oldPrice?: number;
   image: string;
   rating?: number;
+  brandId?: number;
+  brandName?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -246,6 +248,14 @@ function mapWishlistItem(row: unknown): WishlistItem {
     ratingRaw != null && Number.isFinite(Number(ratingRaw))
       ? Number(ratingRaw)
       : undefined;
+  const brandIdRaw = product['brandId'] ?? product['BrandId'];
+  const brandId =
+    brandIdRaw != null && Number.isFinite(Number(brandIdRaw)) && Number(brandIdRaw) > 0
+      ? Number(brandIdRaw)
+      : undefined;
+  const brandName = String(
+    product['brandName'] ?? product['BrandName'] ?? '',
+  ).trim();
 
   return {
     productId,
@@ -254,5 +264,7 @@ function mapWishlistItem(row: unknown): WishlistItem {
     oldPrice,
     image,
     rating,
+    brandId,
+    brandName: brandName || undefined,
   };
 }

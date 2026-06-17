@@ -23,6 +23,8 @@ export interface ProductItem {
   image: string;
   mediaUrl?: string;
   twoDImageUrl?: string;
+  brandId?: number;
+  brandName?: string;
 }
 
 @Component({
@@ -152,12 +154,8 @@ export class ProductCardComponent implements OnInit, OnDestroy {
       quantity: 1,
     };
 
-    console.log('Adding to cart:', body);
-
     this.cartService.addToCart(body).subscribe({
       next: (response) => {
-        console.log('Added to cart successfully:', response);
-
         this.cartService.getCart().subscribe({
           next: (cart) => {
             this.cartService.updateCartCountFromItems(cart.items);

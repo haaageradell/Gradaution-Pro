@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Observable } from 'rxjs';
+import { Observable, map, switchMap } from 'rxjs';
 import { FilterSidebarComponent } from '../../components/filter-sidebar/filter-sidebar.component';
 import { PaginationComponent } from '../../components/pagination/pagination.component';
 import {
@@ -9,6 +9,7 @@ import {
   ProductItem,
 } from '../../components/product-card/product-card.component';
 import { Product, ProductsApiResponse } from '../../core/models/product.model';
+import { BrandService } from '../../core/services/brand.service';
 import { ProductService } from '../../core/services/product.service';
 
 @Component({
@@ -26,6 +27,7 @@ import { ProductService } from '../../core/services/product.service';
 })
 export class ProductsComponent implements OnInit {
   private readonly productService = inject(ProductService);
+  private readonly brandService = inject(BrandService);
 
   tabs = [
     { label: 'All Glasses', categoryId: null as number | null },
@@ -74,6 +76,7 @@ export class ProductsComponent implements OnInit {
       return;
     }
     this.selectedBrandId = brandId;
+
     this.fetchProducts(this.productService.getProductsByBrand(brandId));
   }
 
@@ -87,13 +90,18 @@ export class ProductsComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    request$.subscribe({
-      next: (response) => {
-        const productsArray = this.extractProducts(response);
-        // console.log('Products:', productsArray);
-        // console.log('First Product:', productsArray[0] ?? null);
-
-        this.products = productsArray.map((product) =>
+    request$
+      .pipe(
+        switchMap((response) => {
+          const productsArray = this.extractProducts(response);
+          return this.brandService.enrichProducts(productsArray).pipe(
+            map((enrichedProducts) => ({ response, enrichedProducts })),
+          );
+        }),
+      )
+      .subscribe({
+      next: ({ response, enrichedProducts }) => {
+        this.products = enrichedProducts.map((product) =>
           this.mapProductToCardItem(product),
         );
 
@@ -130,6 +138,8 @@ export class ProductsComponent implements OnInit {
       image,
       mediaUrl: product?.mediaUrl || '',
       twoDImageUrl: product?.twoDImageUrl || '',
+      brandId: product?.brandId,
+      brandName: product?.brandName,
     };
   }
 
