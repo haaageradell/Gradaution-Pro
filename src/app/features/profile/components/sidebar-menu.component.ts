@@ -127,15 +127,15 @@ export class SidebarMenuComponent {
   readonly menuItems: TabItem[] = [
     {
       id: 'personal-info',
-      label: 'Personal Info',
+      label: 'Profile Information',
       subLabel: 'Personal details & contact',
       icon: 'fa-regular fa-user',
     },
     {
-      id: 'orders',
-      label: 'My Orders',
-      subLabel: 'Track & view order history',
-      icon: 'fa-solid fa-box',
+      id: 'addresses',
+      label: 'Addresses',
+      subLabel: 'Shipping & billing addresses',
+      icon: 'fa-solid fa-location-dot',
     },
     {
       id: 'wishlist',
@@ -144,16 +144,16 @@ export class SidebarMenuComponent {
       icon: 'fa-regular fa-heart',
     },
     {
+      id: 'orders',
+      label: 'My Orders',
+      subLabel: 'Track & view order history',
+      icon: 'fa-solid fa-box',
+    },
+    {
       id: 'payment-methods',
       label: 'Payment Methods',
       subLabel: 'Manage cards & wallets',
       icon: 'fa-solid fa-credit-card',
-    },
-    {
-      id: 'addresses',
-      label: 'Addresses',
-      subLabel: 'Shipping & billing addresses',
-      icon: 'fa-solid fa-location-dot',
     },
     {
       id: 'settings',

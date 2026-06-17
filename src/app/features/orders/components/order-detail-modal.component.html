@@ -1,0 +1,200 @@
+<div
+  *ngIf="orderId"
+  class="detail-overlay fixed inset-0 z-50 flex items-end justify-center bg-[#241b35]/45 p-0 sm:items-center sm:p-4"
+  (click)="close()"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="order-detail-title"
+>
+  <div
+    class="detail-panel flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl border border-[#ECE8F3] bg-white shadow-xl sm:rounded-2xl"
+    (click)="$event.stopPropagation()"
+  >
+    <div
+      class="flex items-center justify-between border-b border-[#F6F4F8] bg-[#FBFAFD] px-5 py-4"
+    >
+      <div>
+        <p class="text-[10px] font-semibold uppercase tracking-wide text-[#9D93AF]">
+          Order Details
+        </p>
+        <h2 id="order-detail-title" class="text-lg font-bold text-[#2D2340]">
+          {{ orderDetail?.orderNumber || orderId }}
+        </h2>
+      </div>
+      <button
+        type="button"
+        (click)="close()"
+        class="flex h-9 w-9 items-center justify-center rounded-full text-[#7E7391] transition hover:bg-[#F3EDF7] hover:text-[#4B1D5A]"
+        aria-label="Close order details"
+      >
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto px-5 py-5">
+      <div *ngIf="isLoading" class="space-y-4 py-6">
+        <div class="skeleton h-20 rounded-xl"></div>
+        <div class="skeleton h-28 rounded-xl"></div>
+        <div class="skeleton h-28 rounded-xl"></div>
+      </div>
+
+      <div *ngIf="!isLoading && errorMessage" class="py-10 text-center">
+        <p class="text-sm text-[#D04E4E]">{{ errorMessage }}</p>
+      </div>
+
+      <ng-container *ngIf="!isLoading && orderDetail as detail">
+        <div class="mb-5 flex flex-wrap items-center gap-2">
+          <span [class]="'order-status ' + statusClass(detail.status)">
+            {{ detail.status }}
+          </span>
+          <span class="text-xs text-[#9D93AF]">
+            Placed on {{ formatDate(detail.orderDate) }}
+          </span>
+        </div>
+
+        <section class="mb-6">
+          <h3 class="mb-3 text-sm font-bold text-[#2D2340]">Products</h3>
+          <div class="space-y-3">
+            <div
+              *ngFor="let item of detail.items"
+              class="flex gap-3 rounded-xl border border-[#ECE8F3] bg-[#FBFAFD] p-3"
+            >
+              <div
+                class="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-[#F6F4F8]"
+              >
+                <img
+                  [src]="item.productImage || fallbackImage"
+                  [alt]="item.productName"
+                  (error)="handleImageError($event)"
+                  loading="lazy"
+                  class="h-full w-full object-cover"
+                />
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-bold text-[#2D2340]">
+                  {{ item.productName }}
+                </p>
+                <p class="mt-1 text-xs text-[#9D93AF]">
+                  Qty: {{ item.quantity }} ×
+                  {{ formatMoney(item.unitPrice, detail.currency) }}
+                </p>
+                <p class="mt-2 text-sm font-extrabold text-[#4B1D5A]">
+                  Subtotal:
+                  {{ formatMoney(item.subtotal, detail.currency) }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="grid gap-4 md:grid-cols-2">
+          <section
+            class="rounded-xl border border-[#ECE8F3] bg-white p-4 shadow-sm"
+          >
+            <h3 class="mb-3 text-sm font-bold text-[#2D2340]">
+              Shipping Details
+            </h3>
+            <div class="space-y-1 text-sm text-[#5A4F73]">
+              <p
+                *ngIf="detail.shipping.recipientName"
+                class="font-semibold text-[#2D2340]"
+              >
+                {{ detail.shipping.recipientName }}
+                <span
+                  *ngIf="detail.shipping.badge"
+                  class="ml-1 rounded border border-[#ECE8F3] px-1.5 py-0.5 text-[10px] font-medium text-[#7E7391]"
+                >
+                  {{ detail.shipping.badge }}
+                </span>
+              </p>
+              <p *ngFor="let line of detail.shipping.lines">{{ line }}</p>
+              <p *ngIf="detail.shipping.phone">{{ detail.shipping.phone }}</p>
+              <p
+                *ngIf="
+                  !detail.shipping.recipientName &&
+                  !detail.shipping.lines.length
+                "
+              >
+                {{ detail.shipping.formattedAddress || '—' }}
+              </p>
+              <p
+                *ngIf="detail.estimatedDelivery"
+                class="mt-2 text-xs text-[#9D93AF]"
+              >
+                Est. delivery:
+                {{ formatDate(detail.estimatedDelivery) }}
+              </p>
+            </div>
+          </section>
+
+          <section
+            class="rounded-xl border border-[#ECE8F3] bg-white p-4 shadow-sm"
+          >
+            <h3 class="mb-3 text-sm font-bold text-[#2D2340]">
+              Payment Details
+            </h3>
+            <div class="space-y-1 text-sm text-[#5A4F73]">
+              <p class="font-semibold text-[#2D2340]">
+                {{ detail.payment.methodLabel }}
+              </p>
+              <p *ngIf="detail.payment.brand">
+                {{ detail.payment.brand }}
+                <span *ngIf="detail.payment.last4">
+                  •••• {{ detail.payment.last4 }}
+                </span>
+              </p>
+            </div>
+          </section>
+        </div>
+
+        <section
+          class="mt-4 rounded-xl border border-[#ECE8F3] bg-[#FBFAFD] p-4"
+        >
+          <h3 class="mb-3 text-sm font-bold text-[#2D2340]">Order Summary</h3>
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between text-[#5A4F73]">
+              <dt>Subtotal</dt>
+              <dd>{{ formatMoney(detail.summary.subtotal, detail.currency) }}</dd>
+            </div>
+            <div
+              *ngIf="detail.summary.discount > 0"
+              class="flex justify-between text-[#3B9B56]"
+            >
+              <dt>Discount</dt>
+              <dd>
+                -{{ formatMoney(detail.summary.discount, detail.currency) }}
+              </dd>
+            </div>
+            <div
+              *ngIf="detail.summary.couponDiscount > 0"
+              class="flex justify-between text-[#3B9B56]"
+            >
+              <dt>Coupon</dt>
+              <dd>
+                -{{
+                  formatMoney(detail.summary.couponDiscount, detail.currency)
+                }}
+              </dd>
+            </div>
+            <div class="flex justify-between text-[#5A4F73]">
+              <dt>Shipping</dt>
+              <dd>
+                {{
+                  detail.summary.shipping > 0
+                    ? formatMoney(detail.summary.shipping, detail.currency)
+                    : 'Free'
+                }}
+              </dd>
+            </div>
+            <div
+              class="flex justify-between border-t border-[#ECE8F3] pt-2 text-base font-extrabold text-[#4B1D5A]"
+            >
+              <dt>Total</dt>
+              <dd>{{ formatMoney(detail.summary.total, detail.currency) }}</dd>
+            </div>
+          </dl>
+        </section>
+      </ng-container>
+    </div>
+  </div>
+</div>

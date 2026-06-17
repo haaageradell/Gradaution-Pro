@@ -8,14 +8,14 @@ import {
   Validators,
 } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { catchError, EMPTY, finalize, forkJoin, map, Observable, of, switchMap, throwError } from 'rxjs';
+import { catchError, EMPTY, finalize, forkJoin, map, Observable, of, switchMap, tap, throwError } from 'rxjs';
 import {
   CartCoupon,
   CartLineItem,
   CartPriceSummary,
   CartViewModel,
 } from '../../../core/models/cart.models';
-import type { OrderListItem } from '../../../core/models/order-api.models';
+import type { OrderSummary } from '../../../core/models/order.model';
 import { CartService } from '../../../core/services/cart.service';
 import { OrderService } from '../../../core/services/order.service';
 import { PaymentMethodService } from '../../../core/services/payment-method.service';
@@ -366,7 +366,7 @@ export class CheckoutPageComponent implements OnInit {
       orders: this.orderService.getMyOrders().pipe(
         catchError((err: HttpErrorResponse) => {
           console.error(err);
-          return of([] as OrderListItem[]);
+          return of([] as OrderSummary[]);
         }),
       ),
     })
@@ -509,16 +509,41 @@ export class CheckoutPageComponent implements OnInit {
   }
 
   private buildOrderBody(paymentMethodId: string) {
+    const selectedAddress = this.mockAddresses.find(
+      (addr) => addr.id === this.selectedAddressId,
+    );
+    const selectedPayment = this.resolveSelectedPayment();
+
     return {
       currency: 'EGP',
       discount: this.summary.discount,
       shippingCost: this.summary.shipping,
       estimatedDelivery: this.buildEstimatedDeliveryIso(),
       paymentMethodId,
+      subtotal: this.summary.subtotal,
+      total: this.summary.total,
+      couponDiscount: this.summary.couponDiscount,
+      shippingAddress: selectedAddress
+        ? {
+            name: selectedAddress.name,
+            badge: selectedAddress.badge,
+            lines: selectedAddress.lines,
+            phone: selectedAddress.phone,
+          }
+        : null,
+      paymentMethod: selectedPayment
+        ? {
+            id: selectedPayment.id,
+            brand: selectedPayment.brand,
+            last4: selectedPayment.last4,
+          }
+        : null,
       items: this.cartItems.map((item) => ({
         productId: item.productId,
         quantity: item.quantity,
         price: item.unitPrice,
+        productName: item.productName,
+        productImage: item.productImage,
       })),
     };
   }
@@ -548,15 +573,25 @@ export class CheckoutPageComponent implements OnInit {
 
   private handlePlaceOrderSuccess(response: unknown): void {
     console.log('[Checkout] place order API response:', response);
-    this.toastr.success('Order placed successfully', 'Checkout');
-
-    this.cartService.getCart().subscribe({
-      next: () => {
-        this.cartService.updateCartCountFromItems([]);
-      },
+    this.orderService.handleOrderPlaced(response);
+    this.toastr.success('Order placed successfully', 'Checkout', {
+      positionClass: 'toast-bottom-right',
     });
 
-    this.router.navigate(['/orders']);
+    this.cartService
+      .clearCart()
+      .pipe(
+        catchError((err: HttpErrorResponse) => {
+          console.error('[Checkout] clearCart error:', err);
+          return of(null);
+        }),
+        tap(() => this.cartService.updateCartCountFromItems([])),
+        switchMap(() => this.orderService.refreshOrders()),
+        finalize(() => {
+          this.router.navigate(['/orders']);
+        }),
+      )
+      .subscribe();
   }
 
   private detectCardProvider(cardNumber: string): string {

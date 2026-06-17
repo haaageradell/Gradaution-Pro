@@ -1,12 +1,25 @@
-<section class="mx-auto w-full max-w-[1240px] px-4 pb-14 pt-28">
-  <div *ngIf="isLoading" class="flex min-h-[260px] items-center justify-center">
+<section
+  [ngClass]="
+    embedded
+      ? 'w-full'
+      : 'mx-auto w-full max-w-[1240px] px-4 pb-14 pt-28'
+  "
+>
+  <div
+    *ngIf="isLoading"
+    [ngClass]="
+      embedded
+        ? 'flex min-h-[200px] items-center justify-center'
+        : 'flex min-h-[260px] items-center justify-center'
+    "
+  >
     <div
       class="h-10 w-10 animate-spin rounded-full border-4 border-[#E8DEEF] border-t-[#4F266E]"
     ></div>
   </div>
 
   <ng-container *ngIf="!isLoading">
-    <header class="mb-6">
+    <header *ngIf="!embedded" class="mb-6">
       <h1 class="text-3xl font-bold text-[#2D2340]">Wishlist</h1>
       <p class="mt-2 text-sm text-[#7E7391]">
         Your handpicked favorites and bookmarked frames.

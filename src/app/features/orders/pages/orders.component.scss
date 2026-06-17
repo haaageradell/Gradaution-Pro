@@ -1,0 +1,120 @@
+@use 'sass:color';
+
+:host {
+  display: block;
+}
+
+.order-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  border-width: 1px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.order-status--delivered {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.order-status--shipped {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.order-status--processing {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.order-status--pending {
+  border-color: #fed7aa;
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.order-status--cancelled {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.order-status--default {
+  border-color: #e5e7eb;
+  background: #f9fafb;
+  color: #4b5563;
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: #f3edf7;
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.65),
+    transparent
+  );
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.detail-overlay {
+  animation: fade-in 0.2s ease-out;
+}
+
+.detail-panel {
+  animation: slide-up 0.28s ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.summary-pill {
+  border: 1px solid #ece8f3;
+  background: #fff;
+  border-radius: 1rem;
+  padding: 0.85rem 1rem;
+}
+
+@media (max-width: 640px) {
+  .detail-panel {
+    max-height: 92vh;
+  }
+}

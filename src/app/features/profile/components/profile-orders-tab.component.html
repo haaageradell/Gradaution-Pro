@@ -1,0 +1,78 @@
+<div class="flex flex-col gap-5">
+  <div *ngIf="isLoading()" class="space-y-4 animate-pulse">
+    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div
+        *ngFor="let _ of skeletonItems"
+        class="h-20 rounded-2xl bg-[#F3EDF7]"
+      ></div>
+    </div>
+    <div
+      *ngFor="let _ of skeletonItems"
+      class="h-28 rounded-2xl bg-[#F3EDF7]"
+    ></div>
+  </div>
+
+  <ng-container *ngIf="!isLoading()">
+    <div
+      *ngIf="loadError()"
+      class="flex flex-col items-center gap-3 rounded-2xl border border-[#F5D0D0] bg-[#FDF4F4] px-6 py-10 text-center"
+    >
+      <div
+        class="flex h-14 w-14 items-center justify-center rounded-full bg-white text-[#D04E4E]"
+      >
+        <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+      </div>
+      <h4 class="text-base font-bold text-[#2D2340]">Unable to load orders</h4>
+      <p class="max-w-md text-sm text-[#7E7391]">{{ loadError() }}</p>
+      <button
+        type="button"
+        (click)="retryLoad()"
+        class="mt-2 rounded-xl bg-[#4F266E] px-6 py-2.5 text-xs font-bold text-white transition hover:bg-[#5C2D82]"
+      >
+        Try Again
+      </button>
+    </div>
+
+    <ng-container *ngIf="!loadError()">
+      <app-order-profile-stats
+        *ngIf="orders().length > 0"
+        [stats]="profileStats()"
+      ></app-order-profile-stats>
+
+      <div
+        *ngIf="orders().length === 0"
+        class="flex flex-col items-center gap-3 rounded-2xl border border-[#ECE8F3] bg-white py-12 text-center shadow-sm"
+      >
+        <div
+          class="flex h-16 w-16 items-center justify-center rounded-full bg-[#F3EDF7] text-[#4B1D5A]"
+        >
+          <i class="fa-solid fa-box-open text-2xl"></i>
+        </div>
+        <h4 class="text-base font-bold text-[#2D2340]">No orders yet</h4>
+        <p class="max-w-sm text-xs text-[#9D93AF]">
+          Your order history will appear here after you complete checkout.
+        </p>
+        <a
+          routerLink="/products"
+          class="mt-3 rounded-xl bg-[#4B1D5A] px-6 py-2.5 text-xs font-bold text-white transition hover:bg-[#3C1748]"
+        >
+          Start Shopping
+        </a>
+      </div>
+
+      <div *ngIf="orders().length > 0" class="flex flex-col gap-4">
+        <app-order-preview-card
+          *ngFor="let order of orders()"
+          [order]="order"
+          (viewDetails)="openDetails($event)"
+          (trackOrder)="trackOrder($event)"
+        ></app-order-preview-card>
+      </div>
+    </ng-container>
+  </ng-container>
+</div>
+
+<app-order-detail-modal
+  [orderId]="selectedOrderId()"
+  (closed)="closeDetails()"
+></app-order-detail-modal>

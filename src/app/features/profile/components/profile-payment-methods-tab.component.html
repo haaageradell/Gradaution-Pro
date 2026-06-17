@@ -1,0 +1,221 @@
+<!-- Loading -->
+<div *ngIf="isLoading()" class="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-pulse">
+  <div class="h-36 bg-gray-100 rounded-2xl border border-gray-200"></div>
+  <div class="h-36 bg-gray-100 rounded-2xl border border-gray-200"></div>
+</div>
+
+<!-- Error -->
+<div
+  *ngIf="!isLoading() && loadError()"
+  class="p-6 text-center border border-dashed border-red-200 rounded-2xl bg-red-50 flex flex-col items-center gap-3"
+>
+  <i class="fa-solid fa-triangle-exclamation text-2xl text-red-500"></i>
+  <h4 class="font-bold text-red-700">Failed to load payment methods</h4>
+  <p class="text-xs text-red-500">{{ loadError() }}</p>
+  <button
+    type="button"
+    (click)="retryLoad()"
+    class="mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition"
+  >
+    Retry Load
+  </button>
+</div>
+
+<!-- Content -->
+<ng-container *ngIf="!isLoading() && !loadError()">
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div
+      *ngFor="let card of paymentMethods()"
+      class="p-5 rounded-2xl border border-[#ECE8F3] bg-white shadow-sm flex flex-col gap-4 relative"
+    >
+      <div class="flex items-center justify-between">
+        <div class="text-2xl text-[#2D2340]">
+          <i [class]="cardBrandIconClass(card)"></i>
+        </div>
+        <button
+          type="button"
+          (click)="deletePaymentMethod(card.id)"
+          [disabled]="deletingPaymentId() === card.id"
+          class="text-xs text-[#9D93AF] hover:text-red-500 transition disabled:opacity-50 flex items-center gap-1.5"
+        >
+          <i
+            *ngIf="deletingPaymentId() === card.id"
+            class="fa-solid fa-circle-notch fa-spin"
+          ></i>
+          <span>Delete</span>
+        </button>
+      </div>
+      <div class="flex flex-col gap-1 mt-2">
+        <span class="text-sm font-mono font-bold tracking-widest text-[#2D2340]">
+          {{ maskedCard(card) }}
+        </span>
+        <span class="text-[10px] text-[#9D93AF] uppercase tracking-wide">
+          {{ expiryLabel(card) }}
+        </span>
+        <span
+          *ngIf="card.cardHolderName"
+          class="text-[10px] text-[#9D93AF] uppercase tracking-wide"
+        >
+          Card Holder: {{ card.cardHolderName }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Add Method Card -->
+    <button
+      type="button"
+      (click)="openAddModal()"
+      class="border-2 border-dashed border-[#ECE8F3] hover:border-[#4B1D5A] bg-white rounded-2xl p-5 flex flex-col items-center justify-center text-center gap-3 transition min-h-[130px] group"
+    >
+      <div
+        class="w-10 h-10 rounded-full bg-[#F6F4F8] text-[#5A4F73] group-hover:bg-[#4B1D5A]/10 group-hover:text-[#4B1D5A] flex items-center justify-center transition"
+      >
+        <i class="fa-solid fa-plus text-sm"></i>
+      </div>
+      <div class="flex flex-col gap-0.5">
+        <span class="text-xs font-bold text-[#2D2340]">Add Payment Method</span>
+        <span class="text-[10px] text-[#9D93AF]">Visa, Mastercard, or wallet</span>
+      </div>
+    </button>
+  </div>
+</ng-container>
+
+<!-- Add Payment Method Modal -->
+<div
+  *ngIf="isAddModalOpen()"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4"
+>
+  <div
+    class="absolute inset-0 bg-[#2D2340]/60 backdrop-blur-sm transition-opacity"
+    (click)="closeAddModal()"
+  ></div>
+
+  <div
+    class="relative bg-white rounded-2xl shadow-xl w-full max-w-md border border-[#ECE8F3] overflow-hidden transform transition-all flex flex-col max-h-[90vh]"
+  >
+    <div
+      class="px-6 py-4 border-b border-[#F6F4F8] flex items-center justify-between bg-[#F8F6FA]"
+    >
+      <h3 class="text-base font-bold text-[#2D2340]">Add Payment Method</h3>
+      <button
+        type="button"
+        (click)="closeAddModal()"
+        [disabled]="isSavingCard()"
+        class="text-[#9D93AF] hover:text-[#4B1D5A] transition w-8 h-8 rounded-full hover:bg-[#ECE8F3] flex items-center justify-center disabled:opacity-50"
+      >
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+
+    <form
+      [formGroup]="cardForm"
+      (ngSubmit)="submitNewCard()"
+      class="flex-1 overflow-y-auto p-6 flex flex-col gap-4"
+    >
+      <div class="flex flex-col gap-1.5">
+        <label for="holderName" class="text-xs font-bold text-[#5A4F73]">Card Holder Name</label>
+        <input
+          id="holderName"
+          type="text"
+          formControlName="holderName"
+          placeholder="Name on card"
+          class="w-full px-4 py-2.5 rounded-xl border bg-[#F8F6FA] text-sm text-[#2D2340] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4B1D5A]/20 transition"
+          [ngClass]="{
+            'border-red-400 focus:ring-red-100': hasError('holderName'),
+            'border-[#ECE8F3] focus:border-[#4B1D5A]': !hasError('holderName')
+          }"
+        />
+        <span *ngIf="getErrorMessage('holderName') as msg" class="text-xs text-red-500 font-medium">
+          {{ msg }}
+        </span>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label for="cardNumber" class="text-xs font-bold text-[#5A4F73]">Card Number</label>
+        <input
+          id="cardNumber"
+          type="text"
+          formControlName="cardNumber"
+          placeholder="0000 0000 0000 0000"
+          class="w-full px-4 py-2.5 rounded-xl border bg-[#F8F6FA] text-sm text-[#2D2340] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4B1D5A]/20 transition"
+          [ngClass]="{
+            'border-red-400 focus:ring-red-100': hasError('cardNumber'),
+            'border-[#ECE8F3] focus:border-[#4B1D5A]': !hasError('cardNumber')
+          }"
+        />
+        <span *ngIf="getErrorMessage('cardNumber') as msg" class="text-xs text-red-500 font-medium">
+          {{ msg }}
+        </span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col gap-1.5">
+          <label for="expireDate" class="text-xs font-bold text-[#5A4F73]">Expire Date</label>
+          <input
+            id="expireDate"
+            type="text"
+            formControlName="expireDate"
+            placeholder="MM/YY"
+            class="w-full px-4 py-2.5 rounded-xl border bg-[#F8F6FA] text-sm text-[#2D2340] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4B1D5A]/20 transition"
+            [ngClass]="{
+              'border-red-400 focus:ring-red-100': hasError('expireDate'),
+              'border-[#ECE8F3] focus:border-[#4B1D5A]': !hasError('expireDate')
+            }"
+          />
+          <span *ngIf="getErrorMessage('expireDate') as msg" class="text-xs text-red-500 font-medium">
+            {{ msg }}
+          </span>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label for="cvv" class="text-xs font-bold text-[#5A4F73]">CVV</label>
+          <input
+            id="cvv"
+            type="password"
+            formControlName="cvv"
+            placeholder="CVV"
+            class="w-full px-4 py-2.5 rounded-xl border bg-[#F8F6FA] text-sm text-[#2D2340] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4B1D5A]/20 transition"
+            [ngClass]="{
+              'border-red-400 focus:ring-red-100': hasError('cvv'),
+              'border-[#ECE8F3] focus:border-[#4B1D5A]': !hasError('cvv')
+            }"
+          />
+          <span *ngIf="getErrorMessage('cvv') as msg" class="text-xs text-red-500 font-medium">
+            {{ msg }}
+          </span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 mt-1">
+        <input
+          id="saveCard"
+          type="checkbox"
+          formControlName="saveCard"
+          class="w-4.5 h-4.5 rounded text-[#4B1D5A] border-[#ECE8F3] focus:ring-[#4B1D5A] transition"
+        />
+        <label for="saveCard" class="text-xs font-semibold text-[#5A4F73] select-none cursor-pointer">
+          Set as default payment method
+        </label>
+      </div>
+
+      <div class="flex justify-end gap-3 mt-4 pt-4 border-t border-[#F6F4F8]">
+        <button
+          type="button"
+          (click)="closeAddModal()"
+          [disabled]="isSavingCard()"
+          class="px-5 py-2.5 border border-[#ECE8F3] text-[#5A4F73] text-xs font-bold rounded-xl transition hover:bg-[#F6F4F8] disabled:opacity-50"
+        >
+          CANCEL
+        </button>
+        <button
+          type="submit"
+          [disabled]="isSavingCard()"
+          class="px-5 py-2.5 bg-[#4B1D5A] text-white text-xs font-bold rounded-xl transition hover:bg-[#3C1748] disabled:opacity-50 flex items-center justify-center min-w-[100px] shadow-sm tracking-wide"
+        >
+          <i *ngIf="isSavingCard()" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+          <span>SAVE CARD</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

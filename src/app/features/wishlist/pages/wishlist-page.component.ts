@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import {
   Component,
   Inject,
+  Input,
   OnDestroy,
   OnInit,
   PLATFORM_ID,
@@ -20,6 +21,9 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './wishlist-page.component.html',
 })
 export class WishlistPageComponent implements OnInit, OnDestroy {
+  /** When true, hides the page header and outer padding (e.g. embedded in Profile). */
+  @Input() embedded = false;
+
   private readonly wishlistService = inject(WishlistService);
   private readonly toastr = inject(ToastrService);
   private readonly destroy$ = new Subject<void>();

@@ -3,6 +3,8 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UserAddress } from '../../../core/models/profile.models';
 
+const PHONE_PATTERN = /^[+\d][\d\s-]{7,14}$/;
+
 @Component({
   selector: 'app-address-modal',
   standalone: true,
@@ -52,8 +54,8 @@ import { UserAddress } from '../../../core/models/profile.models';
                 'border-[#ECE8F3] focus:border-[#4B1D5A]': !hasError('fullName')
               }"
             />
-            <span *ngIf="hasError('fullName')" class="text-xs text-red-500 font-medium">
-              Full name is required (min 3 characters).
+            <span *ngIf="getErrorMessage('fullName') as msg" class="text-xs text-red-500 font-medium">
+              {{ msg }}
             </span>
           </div>
 
@@ -71,8 +73,8 @@ import { UserAddress } from '../../../core/models/profile.models';
                 'border-[#ECE8F3] focus:border-[#4B1D5A]': !hasError('phoneNumber')
               }"
             />
-            <span *ngIf="hasError('phoneNumber')" class="text-xs text-red-500 font-medium">
-              Phone number is required.
+            <span *ngIf="getErrorMessage('phoneNumber') as msg" class="text-xs text-red-500 font-medium">
+              {{ msg }}
             </span>
           </div>
 
@@ -90,8 +92,8 @@ import { UserAddress } from '../../../core/models/profile.models';
                 'border-[#ECE8F3] focus:border-[#4B1D5A]': !hasError('city')
               }"
             />
-            <span *ngIf="hasError('city')" class="text-xs text-red-500 font-medium">
-              City is required.
+            <span *ngIf="getErrorMessage('city') as msg" class="text-xs text-red-500 font-medium">
+              {{ msg }}
             </span>
           </div>
 
@@ -110,8 +112,8 @@ import { UserAddress } from '../../../core/models/profile.models';
                   'border-[#ECE8F3] focus:border-[#4B1D5A]': !hasError('street')
                 }"
               />
-              <span *ngIf="hasError('street')" class="text-xs text-red-500 font-medium">
-                Street is required.
+              <span *ngIf="getErrorMessage('street') as msg" class="text-xs text-red-500 font-medium">
+                {{ msg }}
               </span>
             </div>
 
@@ -129,8 +131,8 @@ import { UserAddress } from '../../../core/models/profile.models';
                   'border-[#ECE8F3] focus:border-[#4B1D5A]': !hasError('building')
                 }"
               />
-              <span *ngIf="hasError('building')" class="text-xs text-red-500 font-medium">
-                Building is required.
+              <span *ngIf="getErrorMessage('building') as msg" class="text-xs text-red-500 font-medium">
+                {{ msg }}
               </span>
             </div>
           </div>
@@ -160,7 +162,7 @@ import { UserAddress } from '../../../core/models/profile.models';
             </button>
             <button
               type="submit"
-              [disabled]="addressForm.invalid || saving"
+              [disabled]="saving"
               class="px-5 py-2.5 bg-[#4B1D5A] text-white text-xs font-bold rounded-xl transition hover:bg-[#3C1748] disabled:opacity-50 flex items-center justify-center min-w-[100px] shadow-sm tracking-wide"
             >
               <i *ngIf="saving" class="fa-solid fa-circle-notch fa-spin mr-2"></i>
@@ -184,16 +186,19 @@ export class AddressModalComponent implements OnChanges {
   constructor(private fb: FormBuilder) {
     this.addressForm = this.fb.group({
       fullName: ['', [Validators.required, Validators.minLength(3)]],
-      phoneNumber: ['', [Validators.required, Validators.pattern(/^[+\d\s-]{8,15}$/)]],
-      city: ['', [Validators.required]],
-      street: ['', [Validators.required]],
-      building: ['', [Validators.required]],
+      phoneNumber: ['', [Validators.required, Validators.pattern(PHONE_PATTERN)]],
+      city: ['', [Validators.required, Validators.minLength(2)]],
+      street: ['', [Validators.required, Validators.minLength(2)]],
+      building: ['', [Validators.required, Validators.minLength(1)]],
       isDefault: [false],
     });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['isOpen'] && this.isOpen) {
+    if (
+      (changes['isOpen'] && this.isOpen) ||
+      (changes['address'] && this.isOpen)
+    ) {
       this.resetForm();
     }
   }
@@ -218,6 +223,8 @@ export class AddressModalComponent implements OnChanges {
         isDefault: false,
       });
     }
+    this.addressForm.markAsPristine();
+    this.addressForm.markAsUntouched();
   }
 
   hasError(controlName: string): boolean {
@@ -225,18 +232,57 @@ export class AddressModalComponent implements OnChanges {
     return !!(control && control.invalid && (control.dirty || control.touched));
   }
 
+  getErrorMessage(controlName: string): string | null {
+    const control = this.addressForm.get(controlName);
+    if (!control || !this.hasError(controlName) || !control.errors) {
+      return null;
+    }
+
+    const errors = control.errors;
+    const labels: Record<string, string> = {
+      fullName: 'Full name',
+      phoneNumber: 'Phone number',
+      city: 'City',
+      street: 'Street',
+      building: 'Building number',
+    };
+    const label = labels[controlName] ?? 'This field';
+
+    if (errors['required']) {
+      return `${label} is required.`;
+    }
+    if (errors['minlength']) {
+      return `${label} must be at least ${errors['minlength'].requiredLength} characters.`;
+    }
+    if (errors['pattern']) {
+      if (controlName === 'phoneNumber') {
+        return 'Please enter a valid phone number (8–15 digits, may include +, spaces, or dashes).';
+      }
+      return `Please enter a valid ${label.toLowerCase()}.`;
+    }
+    return 'Please enter a valid value.';
+  }
+
   onClose(): void {
     this.close.emit();
   }
 
   onSubmit(): void {
-    if (this.addressForm.valid) {
-      const formValue = this.addressForm.value;
-      const result: UserAddress = {
-        id: this.address?.id, // Preserve ID if editing
-        ...formValue,
-      };
-      this.save.emit(result);
+    if (this.addressForm.invalid) {
+      this.addressForm.markAllAsTouched();
+      return;
     }
+
+    const formValue = this.addressForm.getRawValue();
+    const result: UserAddress = {
+      id: this.address?.id,
+      fullName: String(formValue.fullName ?? '').trim(),
+      phoneNumber: String(formValue.phoneNumber ?? '').trim(),
+      city: String(formValue.city ?? '').trim(),
+      street: String(formValue.street ?? '').trim(),
+      building: String(formValue.building ?? '').trim(),
+      isDefault: !!formValue.isDefault,
+    };
+    this.save.emit(result);
   }
 }

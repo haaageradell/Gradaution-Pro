@@ -14,8 +14,7 @@ import { RegisterRequest, RegisterResponse } from '../../models/auth.models';
 import { catchError, finalize, throwError } from 'rxjs';
 
 const PASSWORD_COMPLEXITY_PATTERN =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
-
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d])(?=\S+$).{8,}$/;
 interface BackendRegisterPayload {
   FirstName: string;
   LastName: string;
@@ -103,7 +102,9 @@ export class RegisterComponent {
       Password: password,
       ConfirmPassword: confirmPassword,
     };
-
+    console.log('Password:', password);
+    console.log('Payload:', payload);
+    console.log('Password JSON:', JSON.stringify(password));
     this.authService
       .register(payload as unknown as RegisterRequest)
       .pipe(

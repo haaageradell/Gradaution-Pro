@@ -17,7 +17,9 @@ import { CartPageComponent } from './features/cart/pages/cart-page.component';
 import { CheckoutPageComponent } from './features/checkout/pages/checkout-page.component';
 import { ProfileComponent } from './features/profile/profile.component';
 import { WishlistPageComponent } from './features/wishlist/pages/wishlist-page.component';
+import { OrdersComponent } from './features/orders/pages/orders.component';
 import { ProductDetailsComponent } from './pages/product-details/product-details.component';
+import { RegisterComponent } from './core/auth/register/register.component';
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
 
@@ -28,7 +30,7 @@ export const routes: Routes = [
       { path: 'login', component: LoginComponent, title: 'Login Page' },
       {
         path: 'register',
-        component: LoginComponent,
+        component: RegisterComponent,
         title: 'Register Page',
       },
       {
@@ -95,6 +97,11 @@ export const routes: Routes = [
         path: 'wishlist',
         component: WishlistPageComponent,
         title: 'Wishlist Page',
+      },
+      {
+        path: 'orders',
+        component: OrdersComponent,
+        title: 'Orders Page',
       },
     ],
   },
