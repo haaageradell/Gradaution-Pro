@@ -11,6 +11,7 @@ import {
 import { Product, ProductsApiResponse } from '../../core/models/product.model';
 import { BrandService } from '../../core/services/brand.service';
 import { ProductService } from '../../core/services/product.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-products',
@@ -28,6 +29,7 @@ import { ProductService } from '../../core/services/product.service';
 export class ProductsComponent implements OnInit {
   private readonly productService = inject(ProductService);
   private readonly brandService = inject(BrandService);
+  private readonly route = inject(ActivatedRoute);
 
   tabs = [
     { label: 'All Glasses', categoryId: null as number | null },
@@ -43,11 +45,14 @@ export class ProductsComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   totalCount = 0;
-
   products: ProductItem[] = [];
-
+  searchTerm = '';
   ngOnInit(): void {
-    this.loadAllProducts();
+    this.route.queryParams.subscribe((params) => {
+      this.searchTerm = params['search'] || '';
+
+      this.loadAllProducts();
+    });
   }
 
   setPage(page: number): void {
@@ -101,9 +106,21 @@ export class ProductsComponent implements OnInit {
       )
       .subscribe({
         next: ({ response, enrichedProducts }) => {
-          this.products = enrichedProducts.map((product) =>
+          const mappedProducts = enrichedProducts.map((product) =>
             this.mapProductToCardItem(product),
           );
+
+          if (this.searchTerm.trim()) {
+            const term = this.searchTerm.toLowerCase();
+
+            this.products = mappedProducts.filter(
+              (product) =>
+                product.name?.toLowerCase().includes(term) ||
+                product.brandName?.toLowerCase().includes(term),
+            );
+          } else {
+            this.products = mappedProducts;
+          }
 
           this.totalCount = Array.isArray(response)
             ? this.products.length

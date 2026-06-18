@@ -61,9 +61,10 @@
 
         <input
           type="text"
-          id="input-group-1"
-          class="block w-full ps-9 pe-3 py-2 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand shadow-xs placeholder:text-body"
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="search()"
           placeholder="Search"
+          class="block w-full ps-9 pe-3 py-2 bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand shadow-xs placeholder:text-body"
         />
       </div>
 
