@@ -10,7 +10,7 @@
     >
       <img
         src="/images/logo-pro.png"
-        class="h-16 w-auto object-contain"
+        class="h-10 md:h-16 w-auto object-contain"
         alt="Optivio Logo"
       />
     </a>
@@ -67,6 +67,28 @@
         />
       </div>
 
+      <!-- Mobile icons: wishlist, profile, cart -->
+      <div class="flex md:hidden items-center gap-1 ml-2">
+        <a class="icon-btn relative cursor-pointer" routerLink="/wishlist">
+          <span
+            *ngIf="wishlistCount > 0"
+            class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#441752] text-[10px] font-bold text-white"
+          >
+            {{ wishlistCount }}
+          </span>
+          <i class="fa-regular fa-heart text-lg"></i>
+        </a>
+        <a class="icon-btn relative" routerLink="/cart">
+          <span
+            *ngIf="cartCount > 0"
+            class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#4F266E] text-[10px] font-bold text-white"
+          >
+            {{ cartCount }}
+          </span>
+          <i class="fa-solid fa-bag-shopping text-lg"></i>
+        </a>
+      </div>
+
       <button
         data-collapse-toggle="navbar-search"
         type="button"
@@ -89,6 +111,7 @@
         </svg>
       </button>
 
+      <!-- Desktop icons -->
       <div class="hidden md:flex items-center gap-2 ml-3">
         <a class="icon-btn relative cursor-pointer" routerLink="/wishlist">
           <span
@@ -100,8 +123,8 @@
           <i class="fa-regular fa-heart text-lg"></i>
         </a>
         <a class="icon-btn" routerLink="/profile"
-          ><i class="fa-regular fa-user text-lg"></i
-        ></a>
+          ><i class="fa-regular fa-user text-lg"></i>
+        </a>
         <a class="icon-btn relative" routerLink="/cart">
           <span
             *ngIf="cartCount > 0"
@@ -152,7 +175,7 @@
           <a
             routerLink="/home"
             routerLinkActive="is-active"
-            class="block py-2 px-3 md:p-0 nav-link"
+            class="block py-3 px-4 md:py-0 md:px-0 nav-link"
             >Home</a
           >
         </li>
@@ -161,7 +184,7 @@
           <a
             routerLink="/about"
             routerLinkActive="is-active"
-            class="block py-2 px-3 md:p-0 nav-link"
+            class="block py-3 px-4 md:py-0 md:px-0 nav-link"
             >About Us</a
           >
         </li>
@@ -170,7 +193,7 @@
           <a
             routerLink="/products"
             routerLinkActive="is-active"
-            class="block py-2 px-3 md:p-0 nav-link"
+            class="block py-3 px-4 md:py-0 md:px-0 nav-link"
             >Products</a
           >
         </li>
@@ -179,7 +202,7 @@
           <a
             routerLink="/vision"
             routerLinkActive="is-active"
-            class="block py-2 px-3 md:p-0 nav-link"
+            class="block py-3 px-4 md:py-0 md:px-0 nav-link"
             >Vision Test</a
           >
         </li>
@@ -188,7 +211,7 @@
           <a
             routerLink="/face"
             routerLinkActive="is-active"
-            class="block py-2 px-3 md:p-0 nav-link"
+            class="block py-3 px-4 md:py-0 md:px-0 nav-link"
             >Face Analysis</a
           >
         </li>
@@ -197,8 +220,18 @@
           <a
             routerLink="/contact"
             routerLinkActive="is-active"
-            class="block py-2 px-3 md:p-0 nav-link"
+            class="block py-3 px-4 md:py-0 md:px-0 nav-link"
             >Contact Us</a
+          >
+        </li>
+
+        <!-- Mobile-only: profile link in menu -->
+        <li class="md:hidden">
+          <a
+            routerLink="/profile"
+            routerLinkActive="is-active"
+            class="block py-3 px-4 nav-link"
+            ><i class="fa-regular fa-user mr-2"></i>Profile</a
           >
         </li>
       </ul>

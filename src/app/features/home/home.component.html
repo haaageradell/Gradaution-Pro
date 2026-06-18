@@ -1,6 +1,6 @@
 <section class="home-page w-full bg-white pt-[88px]">
   <section
-    class="home-hero relative h-[550px] w-full overflow-hidden bg-[#dedcde]"
+    class="home-hero relative h-[320px] sm:h-[400px] md:h-[550px] w-full overflow-hidden bg-[#dedcde]"
   >
     <img
       src="/images/home-1.png"
@@ -11,7 +11,7 @@
     <div class="relative z-10 mx-auto flex h-full max-w-8xl items-center px-8">
       <div class="home-hero-copy max-w-[540px]">
         <h1
-          class="-ml-2 mb-6 text-lg font-semibold leading-tight tracking-tight text-[#1a1520] md:text-5xl md:font-semibold"
+          class="-ml-2 mb-6 text-lg font-semibold leading-tight tracking-tight text-[#1a1520] sm:text-3xl md:text-5xl md:font-semibold"
         >
           Virtual Try-On, Real Confidence!
         </h1>
@@ -28,7 +28,7 @@
   </section>
   <div class="mx-auto max-w-6xl">
     <section
-      class="grid grid-cols-1 items-center gap-10 px-8 py-12 md:grid-cols-[360px_1fr]"
+      class="grid grid-cols-1 items-center gap-10 px-8 py-12 md:grid-cols-[280px_1fr] lg:grid-cols-[360px_1fr]"
     >
       <img
         src="/images/home-2.png"
@@ -54,7 +54,7 @@
     <section class="grid grid-cols-1 gap-6 px-8 pb-12 md:grid-cols-2">
       @for (category of categories; track category.slug) {
         <article
-          class="group relative h-[340px] overflow-hidden rounded-3xl bg-gray-200 shadow-[0_12px_40px_-16px_rgba(0,0,0,0.2)] ring-1 ring-black/[0.04] transition duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_24px_50px_-12px_rgba(61,10,82,0.18)]"
+          class="group relative h-[220px] sm:h-[280px] md:h-[340px] overflow-hidden rounded-3xl bg-gray-200 shadow-[0_12px_40px_-16px_rgba(0,0,0,0.2)] ring-1 ring-black/[0.04] transition duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_24px_50px_-12px_rgba(61,10,82,0.18)]"
         >
           <img
             [src]="category.imageUrl"
@@ -65,7 +65,7 @@
           <a
             routerLink="/products"
             [queryParams]="{ category: category.slug }"
-            class="absolute bottom-4 left-1/2 flex h-12 w-52 -translate-x-1/2 cursor-pointer items-center justify-center rounded-2xl bg-[#3d0a52] text-center text-lg font-medium text-white no-underline shadow-lg shadow-[#3d0a52]/25 transition duration-300 hover:-translate-y-0.5 hover:bg-[#4d1368] hover:shadow-xl hover:shadow-[#4d1368]/30 active:translate-y-0"
+            class="absolute bottom-4 left-1/2 flex h-12 w-40 sm:w-52 -translate-x-1/2 cursor-pointer items-center justify-center rounded-2xl bg-[#3d0a52] text-center text-base sm:text-lg font-medium text-white no-underline shadow-lg shadow-[#3d0a52]/25 transition duration-300 hover:-translate-y-0.5 hover:bg-[#4d1368] hover:shadow-xl hover:shadow-[#4d1368]/30 active:translate-y-0"
           >
             {{ category.name }}
           </a>
@@ -293,7 +293,7 @@
     </h2>
 
     <div
-      class="mx-auto grid max-w-6xl grid-cols-1 gap-5 md:grid-cols-3 md:gap-6"
+      class="mx-auto grid max-w-6xl grid-cols-1 gap-5 md:grid-cols-3 md:gap-6 overflow-hidden"
     >
       <article
         class="home-benefit-card group relative rounded-2xl border border-[#ececec] bg-white p-7 shadow-[0_2px_16px_rgba(0,0,0,0.04)] transition-all duration-300 ease-out hover:-translate-y-2 hover:border-[#dfd5eb] hover:shadow-[0_22px_50px_rgba(91,37,125,0.14)]"

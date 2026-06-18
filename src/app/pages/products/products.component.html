@@ -14,7 +14,7 @@
       <p class="text-[15px] font-medium text-[#c3bdcc]">Category</p>
       <div class="mt-1 flex items-center justify-center gap-4">
         <h1
-          class="text-[40px] font-bold leading-none tracking-[-0.02em] text-[#2b1f3b]"
+          class="text-[28px] sm:text-[34px] md:text-[40px] font-bold leading-none tracking-[-0.02em] text-[#2b1f3b]"
         >
           All Glasses
         </h1>
@@ -50,7 +50,7 @@
       </div>
 
       <div
-        class="mx-auto mt-5 inline-flex items-center rounded-full bg-[#f4f2f7] p-1"
+        class="mx-auto mt-5 inline-flex items-center rounded-full bg-[#f4f2f7] p-1 overflow-x-auto max-w-full flex-wrap justify-center"
       >
         <button
           *ngFor="let tab of tabs"
@@ -68,15 +68,15 @@
       </div>
     </header>
 
-    <div class="mt-11 flex items-start gap-7">
+    <div class="mt-11 flex flex-col lg:flex-row items-start gap-7">
       <div class="hidden w-[228px] shrink-0 lg:block">
         <app-filter-sidebar></app-filter-sidebar>
       </div>
 
       <div class="min-w-0 flex-1">
-        <div class="mb-5 flex items-center justify-between">
+        <div class="mb-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <h2
-            class="text-[34px] font-bold leading-none tracking-[-0.02em] text-[#2a1f39]"
+            class="text-[22px] sm:text-[28px] md:text-[34px] font-bold leading-none tracking-[-0.02em] text-[#2a1f39]"
           >
             {{ activeTab }}
             <span class="text-[12px] font-semibold text-[#8b8497]"
@@ -131,7 +131,7 @@
           [ngClass]="
             viewMode === 'gridA'
               ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'
-              : 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-4'
+              : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-4'
           "
         >
           <app-shared-product-card

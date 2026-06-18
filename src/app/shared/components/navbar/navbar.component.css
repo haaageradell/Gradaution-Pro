@@ -26,6 +26,13 @@
   transition: transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+/* On mobile stacked menu, reduce underline offset so it stays visible */
+@media (max-width: 767px) {
+  .nav-link::after {
+    bottom: -4px;
+  }
+}
+
 .nav-link:hover {
   color: #0f172a; /* slate-900 */
   transform: translateY(-1px);
@@ -49,6 +56,8 @@
   justify-content: center;
   height: 40px;
   width: 40px;
+  min-height: 44px;
+  min-width: 44px;
   border-radius: 9999px;
   color: #111827;
   transition: background-color 420ms cubic-bezier(0.2, 0.8, 0.2, 1),
@@ -67,3 +76,4 @@
   outline-offset: 3px;
   border-radius: 10px;
 }
+

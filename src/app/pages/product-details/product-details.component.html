@@ -37,7 +37,7 @@
   <!-- ===================== MAIN CONTENT ===================== -->
   <div
     *ngIf="!isLoadingProduct && !productError && product"
-    class="max-w-[1100px] mx-auto px-4 py-6"
+    class="max-w-[1100px] mx-auto px-2 sm:px-4 py-6"
   >
     <!-- Breadcrumb -->
     <nav class="flex items-center gap-1.5 text-[13px] text-[#6b6880] mb-6">
@@ -61,7 +61,7 @@
     <!-- ===== PRODUCT SECTION ===== -->
     <div class="flex flex-col lg:flex-row gap-8 mb-10">
       <!-- Left: Gallery -->
-      <div class="flex gap-3 lg:w-[360px] flex-shrink-0">
+      <div class="w-full lg:w-[360px] flex-shrink-0">
         <!-- Thumbnails column -->
         <!-- <div class="flex flex-col gap-2.5">
           <button
@@ -86,7 +86,7 @@
 
         <!-- Main image -->
         <div
-          class="relative flex-1 bg-[#f5f5f7] rounded-2xl overflow-hidden flex items-center justify-center min-h-[260px]"
+          class="relative flex-1 bg-[#f5f5f7] rounded-2xl overflow-hidden flex items-center justify-center min-h-[220px] sm:min-h-[260px]"
         >
           <!-- Wishlist button -->
           <button
@@ -131,7 +131,7 @@
         </div>
 
         <!-- Product name -->
-        <h1 class="text-[26px] font-bold text-[#1a1423] leading-tight">
+        <h1 class="text-[20px] sm:text-[24px] md:text-[26px] font-bold text-[#1a1423] leading-tight">
           {{ product.name }}
         </h1>
 
@@ -203,11 +203,11 @@
               quantity < 10 ? "0" + quantity : quantity
             }}</span>
           </span>
-          <div class="flex items-center gap-3">
-            <!-- Qty control -->
-            <div
-              class="flex items-center border border-[#ddd8e8] rounded-lg overflow-hidden"
-            >
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <!-- Qty control -->
+              <div
+                class="flex items-center border border-[#ddd8e8] rounded-lg overflow-hidden"
+              >
               <button
                 type="button"
                 (click)="decrementQty()"
@@ -233,12 +233,12 @@
             </div>
 
             <!-- Add to Cart -->
-            <button
-              type="button"
-              (click)="addToCart()"
-              [disabled]="isAdding"
-              class="flex-1 h-11 bg-[#5b257d] hover:bg-[#6a2d91] text-white text-[14px] font-semibold rounded-lg transition cursor-pointer px-6 disabled:opacity-50"
-            >
+              <button
+                type="button"
+                (click)="addToCart()"
+                [disabled]="isAdding"
+                class="flex-1 h-11 bg-[#5b257d] hover:bg-[#6a2d91] text-white text-[14px] font-semibold rounded-lg transition cursor-pointer px-6 disabled:opacity-50 min-w-0"
+              >
               {{ isAdding ? "Adding..." : "Add to Cart" }}
             </button>
           </div>
@@ -342,7 +342,7 @@
                 placeholder="Write a review"
                 [(ngModel)]="reviewText"
                 [disabled]="isSubmittingReview"
-                class="flex-1 border border-[#e0daea] rounded-lg px-4 py-2.5 text-[13px] text-[#2e2a35] placeholder-[#b09ece] focus:outline-none focus:border-[#5b257d] transition bg-white disabled:opacity-60"
+                class="flex-1 w-full sm:w-auto border border-[#e0daea] rounded-lg px-4 py-2.5 text-[13px] text-[#2e2a35] placeholder-[#b09ece] focus:outline-none focus:border-[#5b257d] transition bg-white disabled:opacity-60"
               />
 
               <!-- Interactive star rating picker -->
@@ -370,7 +370,7 @@
                 type="button"
                 (click)="submitReview()"
                 [disabled]="isSubmittingReview"
-                class="flex items-center gap-2 px-5 py-2.5 bg-[#5b257d] hover:bg-[#6a2d91] text-white text-[13px] font-semibold rounded-lg transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+                class="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-[#5b257d] hover:bg-[#6a2d91] text-white text-[13px] font-semibold rounded-lg transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 <span
                   *ngIf="isSubmittingReview"
@@ -577,7 +577,7 @@
       <!-- Similar product cards grid -->
       <div
         *ngIf="!isLoadingSimilar && !similarError && similarProducts.length > 0"
-        class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
       >
         <app-shared-product-card
           *ngFor="let item of similarProducts"

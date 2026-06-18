@@ -13,7 +13,7 @@ import { CartLineItem } from '../../../core/models/cart.models';
       <img
         [src]="item.productImage"
         [alt]="item.productName"
-        class="h-24 w-full rounded-xl object-cover sm:w-24"
+        class="h-24 w-full max-h-32 rounded-xl object-cover sm:w-24 sm:max-h-none"
       />
 
       <div class="flex-1">
