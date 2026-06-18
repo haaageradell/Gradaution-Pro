@@ -2,16 +2,14 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
-  ElementRef,
   OnDestroy,
   OnInit,
-  ViewChild,
   inject,
   signal,
   PLATFORM_ID,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { Subscription } from 'rxjs';
 import { ProductService } from '../../core/services/product.service';
 import { Product } from '../../core/models/product.model';
 import { AiService } from '../../core/services/ai.service';
@@ -29,23 +27,27 @@ export class TryOnComponent implements OnInit, OnDestroy {
   private readonly productService = inject(ProductService);
   private readonly aiService = inject(AiService);
   private readonly platformId = inject(PLATFORM_ID);
-  private readonly sanitizer = inject(DomSanitizer);
-
-  @ViewChild('photoCanvas', { static: false })
-  photoCanvasRef!: ElementRef<HTMLCanvasElement>;
 
   readonly showSplash = signal(true);
   readonly isARStarting = signal(false);
   readonly isModelLoading = signal(false);
-  readonly isPhotoProcessing = signal(false);
-  readonly isStaticImageMode = signal(false);
-  readonly uploadedImageSrc = signal<SafeUrl | string | null>(null);
-  uploadedFile: File | null = null;
-  private hasAutoStartedPhoto = false;
+  private destroyed = false;
+  private subscriptions = new Subscription();
   readonly selectedProduct = signal<Product | null>(null);
   readonly selectedModelUrl = signal<string | null>(null);
   readonly availableProducts = signal<Product[]>([]);
   readonly errorMessage = signal<string | null>(null);
+
+
+  // Upload Photo Mode state
+  readonly isUploadPhotoMode = signal(false);
+  readonly selectedImageFile = signal<File | null>(null);
+  readonly uploadedImagePreview = signal<string | null>(null);
+  readonly isPhotoProcessing = signal(false);
+  readonly resultImageUrl = signal<string | null>(null);
+  readonly photoError = signal<string | null>(null);
+  private previewObjectUrl: string | null = null;
+  private resultObjectUrl: string | null = null;
 
   // Lowered default coordinates so the glasses rest naturally on the nose bridge and eye line
   readonly glassesScale = signal<number>(0.085);
@@ -88,9 +90,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
     return this.selectedModelUrl();
   }
 
-  private originalGetUserMedia: any = null;
-  private drawIntervalId: any = null;
-  private canvasStream: MediaStream | null = null;
   private safetyTimeoutId: any = null;
 
   // Track routing parameters
@@ -112,7 +111,7 @@ export class TryOnComponent implements OnInit, OnDestroy {
       this.passedProduct = state.product ?? null;
       this.passedProductId = state.productId ?? state.product?.id ?? null;
       this.passedMediaUrl = state.mediaUrl ?? state.product?.mediaUrl ?? null;
-      // console.log('[TryOnComponent] Constructor state parsed:', state);
+      console.log('[TryOnComponent] Constructor state parsed:', state);
     }
   }
 
@@ -121,8 +120,12 @@ export class TryOnComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Subscribe to query parameters
-    this.route.queryParams.subscribe((params) => {
+    // Reset destroyed flag on init (component re-created by router)
+    this.destroyed = false;
+
+    // Subscribe to query parameters with proper cleanup tracking
+    const qpSub = this.route.queryParams.subscribe((params) => {
+      if (this.destroyed) return;
       const id = params['id'] || params['productId'];
       const mediaUrl = params['mediaUrl'];
 
@@ -133,13 +136,44 @@ export class TryOnComponent implements OnInit, OnDestroy {
         this.initializeSelectedProduct();
       }
     });
+    this.subscriptions.add(qpSub);
 
     // Fetch catalog
     this.loadCatalog();
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
+
+    // Unsubscribe all tracked observables
+    this.subscriptions.unsubscribe();
+
+    // Stop AR and clean up component state
     this.stopAR();
+
+
+
+    // Clean up upload photo object URLs
+    this.resetUploadState();
+
+    // Aggressively remove A-Frame global DOM pollution that causes blank screen on re-navigation
+    if (isPlatformBrowser(this.platformId)) {
+      // Remove orphaned <video> elements A-Frame injects into <body>
+      document.querySelectorAll('body > video').forEach((vid) => {
+        (vid as HTMLVideoElement).pause();
+        (vid as HTMLVideoElement).srcObject = null;
+        vid.remove();
+      });
+
+      // Remove any stale <a-scene> elements that leaked outside the component
+      document.querySelectorAll('body > a-scene').forEach((scene) => {
+        try { (scene as any).systems?.['mindar-face-system']?.stop(); } catch (_) { /* ignore */ }
+        scene.remove();
+      });
+
+      // Remove orphaned canvases A-Frame may leave behind
+      document.querySelectorAll('body > canvas.a-canvas').forEach((c) => c.remove());
+    }
   }
 
   // Normalizer supporting both PascalCase and camelCase response structures
@@ -176,26 +210,35 @@ export class TryOnComponent implements OnInit, OnDestroy {
   }
 
   loadCatalog(): void {
+    console.log(
+      '[TryOnComponent] Fetching product catalog from backend API...',
+    );
     this.productService.getAllProducts().subscribe({
       next: (response) => {
         // Log 1: Raw API response
-        // console.log('[TryOnComponent] RAW API RESPONSE:', response);
+        console.log('[TryOnComponent] RAW API RESPONSE:', response);
 
         // Log 2: response.data or response array
         const rawList = Array.isArray(response)
           ? response
           : ((response as any)?.data ?? (response as any)?.Data ?? []);
+        console.log('[TryOnComponent] EXTRACTED response.data/array:', rawList);
 
         // Map and normalize product fields
         const mappedList = rawList.map((p: any) =>
           this.extractProductFields(p),
         );
+        console.log('[TryOnComponent] MAPPED normalized products:', mappedList);
 
         // Filter products to ONLY include those with a valid .glb in the mediaUrl
         const filtered = mappedList.filter((prod: Product) => {
           const mUrl = String(prod.mediaUrl || '').trim();
           return mUrl.toLowerCase().includes('.glb');
         });
+        console.log(
+          '[TryOnComponent] FILTERED products containing mediaUrl:',
+          filtered,
+        );
         this.availableProducts.set(filtered);
 
         if (
@@ -242,6 +285,12 @@ export class TryOnComponent implements OnInit, OnDestroy {
       null;
     const productObj = this.passedProduct ?? serviceSelected ?? null;
 
+    console.log('[TryOnComponent] INITIALIZING SELECTION:', {
+      id,
+      mediaUrl,
+      hasObj: !!productObj,
+    });
+
     let productToSelect: Product | null = null;
 
     if (id || mediaUrl) {
@@ -265,7 +314,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
           '[TryOnComponent] SELECTED MODEL URL:',
           productToSelect.mediaUrl,
         );
-        this.checkAndAutoStartPhotoTryOn();
         return;
       }
 
@@ -288,7 +336,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
               '[TryOnComponent] SELECTED MODEL URL:',
               normalized.mediaUrl,
             );
-            this.checkAndAutoStartPhotoTryOn();
           },
           error: (err) => {
             console.error(
@@ -309,7 +356,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
               '[TryOnComponent] FALLBACK SELECTED MODEL URL:',
               mediaUrl || null,
             );
-            this.checkAndAutoStartPhotoTryOn();
           },
         });
         return;
@@ -321,8 +367,14 @@ export class TryOnComponent implements OnInit, OnDestroy {
       productToSelect = this.availableProducts()[0];
       this.selectedProduct.set(productToSelect);
       this.selectedModelUrl.set(productToSelect.mediaUrl || null);
-
-      this.checkAndAutoStartPhotoTryOn();
+      console.log(
+        '[TryOnComponent] Direct access fallback selected:',
+        productToSelect,
+      );
+      console.log(
+        '[TryOnComponent] SELECTED MODEL URL:',
+        productToSelect.mediaUrl,
+      );
     } else {
       console.log('[TryOnComponent] NO MODEL SELECTED.');
     }
@@ -330,19 +382,14 @@ export class TryOnComponent implements OnInit, OnDestroy {
 
   selectProduct(product: Product): void {
     if (!product) return;
+    console.log('[TryOnComponent] Switching product selection to:', product);
 
     this.selectedProduct.set(product);
     this.selectedModelUrl.set(product.mediaUrl || null);
 
     // Show loading spinner while swapping assets
     if (this.showSplash() === false) {
-      if (this.isStaticImageMode()) {
-        if (this.uploadedFile) {
-          this.applyStaticPhotoTryOn(this.uploadedFile, product);
-        }
-      } else {
-        this.isModelLoading.set(true);
-      }
+      this.isModelLoading.set(true);
     }
 
     // Sync state by updating route query parameters
@@ -357,131 +404,132 @@ export class TryOnComponent implements OnInit, OnDestroy {
   }
 
   startLiveAR(): void {
-    this.isStaticImageMode.set(false);
-    this.uploadedImageSrc.set(null);
-    this.restoreGetUserMedia();
     this.startAR();
   }
 
-  onPhotoUploaded(event: Event): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+  // ============ Upload Photo Mode ============
 
+  startUploadPhotoMode(): void {
+    this.showSplash.set(false);
+    this.isUploadPhotoMode.set(true);
+    this.resetUploadState();
+  }
+
+  onImageSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
-      this.uploadedFile = file;
+      this.selectedImageFile.set(file);
+      this.photoError.set(null);
 
-      const product = this.selectedProduct();
-      if (product) {
-        this.applyStaticPhotoTryOn(file, product);
-      } else {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const result = e.target?.result as string;
-          this.uploadedImageSrc.set(
-            this.sanitizer.bypassSecurityTrustUrl(result),
-          );
-          this.isStaticImageMode.set(true);
-        };
-        reader.readAsDataURL(file);
+      // Revoke previous preview URL to prevent memory leaks
+      if (this.previewObjectUrl) {
+        URL.revokeObjectURL(this.previewObjectUrl);
       }
+      this.previewObjectUrl = URL.createObjectURL(file);
+      this.uploadedImagePreview.set(this.previewObjectUrl);
+
+      console.log('[TryOnComponent] Image selected:', {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+      });
     }
+    // Reset input value so re-selecting the same file triggers change event
+    input.value = '';
   }
 
-  applyStaticPhotoTryOn(file: File, product: Product): void {
-    if (!file || !product) return;
+  tryOnPhoto(): void {
+    const file = this.selectedImageFile();
+    const product = this.selectedProduct();
 
-    const glassesUrl = product.twoDImageUrl || '';
-    if (!glassesUrl) {
-      this.errorMessage.set(
-        'The selected product does not have a 2D image preview for photo try-on.',
-      );
+    if (!file) {
+      this.photoError.set('Please upload an image first.');
+      return;
+    }
+    if (!product) {
+      this.photoError.set('No glasses product selected. Please go back and select a product.');
       return;
     }
 
-    this.isPhotoProcessing.set(true);
-    this.errorMessage.set(null);
-    this.showSplash.set(false);
+    // Prevent duplicate requests while processing
+    if (this.isPhotoProcessing()) return;
 
-    this.aiService.tryOnUploadedPhoto(file, glassesUrl).subscribe({
+    this.isPhotoProcessing.set(true);
+    this.photoError.set(null);
+    this.resultImageUrl.set(null);
+
+    console.log('[TryOnComponent] === PHOTO TRY-ON REQUEST ===');
+    console.log('[TryOnComponent] File:', file.name, file.type, file.size, 'bytes');
+    console.log('[TryOnComponent] Product:', product.name, '(id:', product.id, ')');
+    console.log('[TryOnComponent] twoDImageUrl (glassesUrl):', product.twoDImageUrl);
+
+    const sub = this.aiService.tryOnUploadedPhoto(file, product).subscribe({
       next: (blob: Blob) => {
-        const objectUrl = URL.createObjectURL(blob);
-        this.uploadedImageSrc.set(
-          this.sanitizer.bypassSecurityTrustUrl(objectUrl),
-        );
-        this.isStaticImageMode.set(true);
+        if (this.destroyed) return;
+        console.log('[TryOnComponent] === PHOTO TRY-ON RESPONSE ===');
+        console.log('[TryOnComponent] Response blob:', blob.type, blob.size, 'bytes');
+
+        // Revoke previous result URL
+        if (this.resultObjectUrl) {
+          URL.revokeObjectURL(this.resultObjectUrl);
+        }
+        this.resultObjectUrl = URL.createObjectURL(blob);
+        this.resultImageUrl.set(this.resultObjectUrl);
         this.isPhotoProcessing.set(false);
       },
       error: (err) => {
-        console.error('[TryOnComponent] Photo try-on service failed:', err);
-        this.errorMessage.set(
-          'Failed to apply virtual glasses onto the photo. Please check your internet connection or try another image.',
+        if (this.destroyed) return;
+        console.error('[TryOnComponent] Photo try-on failed:', err);
+        this.photoError.set(
+          err?.message || 'Failed to generate try-on result. Please try again.'
         );
         this.isPhotoProcessing.set(false);
       },
     });
+    this.subscriptions.add(sub);
   }
 
-  private dataURLtoFile(dataurl: string, filename: string): File | null {
-    try {
-      const arr = dataurl.split(',');
-      if (arr.length < 2) return null;
-      const mimeMatch = arr[0].match(/:(.*?);/);
-      if (!mimeMatch) return null;
-      const mime = mimeMatch[1];
-      const bstr = atob(arr[1]);
-      let n = bstr.length;
-      const u8arr = new Uint8Array(n);
-      while (n--) {
-        u8arr[n] = bstr.charCodeAt(n);
-      }
-      return new File([u8arr], filename, { type: mime });
-    } catch (e) {
-      console.error('[TryOnComponent] Error converting dataURL to file:', e);
-      return null;
+  downloadResult(): void {
+    if (!this.resultObjectUrl || !isPlatformBrowser(this.platformId)) return;
+    const link = document.createElement('a');
+    link.href = this.resultObjectUrl;
+    link.download = `tryon-${this.selectedProduct()?.name?.replace(/\s+/g, '-') || 'result'}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  retryUpload(): void {
+    if (this.resultObjectUrl) {
+      URL.revokeObjectURL(this.resultObjectUrl);
+      this.resultObjectUrl = null;
     }
+    this.resultImageUrl.set(null);
+    this.photoError.set(null);
   }
 
-  checkAndAutoStartPhotoTryOn(): void {
-    if (this.hasAutoStartedPhoto) return;
-    const cachedImg = this.aiService.uploadedImage();
-    const product = this.selectedProduct();
-    if (cachedImg && product) {
-      this.hasAutoStartedPhoto = true;
+  exitUploadMode(): void {
+    this.resetUploadState();
+    this.isUploadPhotoMode.set(false);
+    this.showSplash.set(true);
+  }
 
-      let file: File | null = null;
-      if (cachedImg.startsWith('data:')) {
-        file = this.dataURLtoFile(cachedImg, 'face-analysis.jpg');
-      } else {
-        console.warn(
-          '[TryOnComponent] Cached image is not a data URL:',
-          cachedImg,
-        );
-      }
+  private resetUploadState(): void {
+    this.selectedImageFile.set(null);
+    this.isPhotoProcessing.set(false);
+    this.photoError.set(null);
+    this.resultImageUrl.set(null);
 
-      if (file) {
-        this.uploadedFile = file;
-        this.applyStaticPhotoTryOn(file, product);
-      }
+    if (this.previewObjectUrl) {
+      URL.revokeObjectURL(this.previewObjectUrl);
+      this.previewObjectUrl = null;
     }
-  }
+    this.uploadedImagePreview.set(null);
 
-  private overrideGetUserMedia(canvasStream: MediaStream): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-
-    if (!this.originalGetUserMedia) {
-      this.originalGetUserMedia = navigator.mediaDevices.getUserMedia;
-    }
-
-    navigator.mediaDevices.getUserMedia = async (constraints) => {
-      return canvasStream;
-    };
-  }
-
-  private restoreGetUserMedia(): void {
-    if (isPlatformBrowser(this.platformId) && this.originalGetUserMedia) {
-      navigator.mediaDevices.getUserMedia = this.originalGetUserMedia;
-      this.originalGetUserMedia = null;
+    if (this.resultObjectUrl) {
+      URL.revokeObjectURL(this.resultObjectUrl);
+      this.resultObjectUrl = null;
     }
   }
 
@@ -499,6 +547,10 @@ export class TryOnComponent implements OnInit, OnDestroy {
       const initAR = () => {
         const faceSystem = sceneEl.systems?.['mindar-face-system'];
         if (faceSystem) {
+          console.log(
+            '[TryOnComponent] Initializing MindAR Face System camera...',
+          );
+
           // Register event handlers BEFORE starting faceSystem
           const onArReady = () => {
             console.log('[TryOnComponent] MindAR Face System is ready.');
@@ -526,6 +578,7 @@ export class TryOnComponent implements OnInit, OnDestroy {
             clearTimeout(this.safetyTimeoutId);
           }
           this.safetyTimeoutId = setTimeout(() => {
+            console.warn('[TryOnComponent] AR load safety timeout triggered.');
             if (this.isARStarting()) {
               this.isARStarting.set(false);
               this.checkAndMoveVideo();
@@ -535,6 +588,9 @@ export class TryOnComponent implements OnInit, OnDestroy {
             }
           }, 6000);
         } else {
+          console.error(
+            '[TryOnComponent] mindar-face-system not registered on the scene.',
+          );
           this.isARStarting.set(false);
           this.errorMessage.set('AR initialization error.');
         }
@@ -546,6 +602,7 @@ export class TryOnComponent implements OnInit, OnDestroy {
         sceneEl.addEventListener('loaded', initAR);
       }
     } else {
+      console.error('[TryOnComponent] a-scene element not found in DOM!');
       this.isARStarting.set(false);
       this.errorMessage.set('AR viewer elements are missing.');
     }
@@ -558,6 +615,7 @@ export class TryOnComponent implements OnInit, OnDestroy {
       const video = document.querySelector('body > video') as HTMLVideoElement;
       const container = document.querySelector('.tryon-container');
       if (video && container) {
+        console.log('[TryOnComponent] Moving webcam video inside container.');
         container.appendChild(video);
 
         video.style.position = 'absolute';
@@ -580,6 +638,9 @@ export class TryOnComponent implements OnInit, OnDestroy {
         }
 
         video.onplaying = () => {
+          console.log(
+            '[TryOnComponent] Injected video is actively playing frames.',
+          );
           this.isARStarting.set(false);
         };
       } else {
@@ -594,22 +655,12 @@ export class TryOnComponent implements OnInit, OnDestroy {
       return;
     }
 
+    console.log('[TryOnComponent] Tearing down AR session.');
+
     if (this.safetyTimeoutId) {
       clearTimeout(this.safetyTimeoutId);
       this.safetyTimeoutId = null;
     }
-
-    if (this.drawIntervalId) {
-      clearInterval(this.drawIntervalId);
-      this.drawIntervalId = null;
-    }
-
-    if (this.canvasStream) {
-      this.canvasStream.getTracks().forEach((track) => track.stop());
-      this.canvasStream = null;
-    }
-
-    this.restoreGetUserMedia();
 
     const sceneEl = document.querySelector('a-scene') as any;
     if (sceneEl) {
@@ -640,11 +691,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
     this.showSplash.set(true);
     this.isARStarting.set(false);
     this.isModelLoading.set(false);
-    this.isPhotoProcessing.set(false);
-    this.isStaticImageMode.set(false);
-    this.uploadedImageSrc.set(null);
-    this.uploadedFile = null;
-    this.hasAutoStartedPhoto = false;
     this.resetAdjustments();
   }
 
@@ -658,7 +704,7 @@ export class TryOnComponent implements OnInit, OnDestroy {
   }
 
   onModelLoaded(): void {
-    // console.log('[TryOnComponent] 3D Model loaded successfully.');
+    console.log('[TryOnComponent] 3D Model loaded successfully.');
     this.isModelLoading.set(false);
   }
 
