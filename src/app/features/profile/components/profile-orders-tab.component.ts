@@ -117,16 +117,16 @@ export class ProfileOrdersTabComponent implements OnInit, OnDestroy {
 
     this.cancellingOrderId.set(orderId);
     this.orderService
-      .cancelOrder(orderId)
+      .cancelOrder(Number(orderId))
       .pipe(
         switchMap(() => this.orderService.refreshOrders()),
         catchError((err: HttpErrorResponse) => {
           console.error('[ProfileOrdersTab] cancelOrder error:', err);
           const message = this.orderService.getErrorMessage(
             err,
-            'Could not cancel order. Please try again.',
+            'Unable to cancel order',
           );
-          this.toastr.error(message, 'My Orders', {
+          this.toastr.error(message, undefined, {
             positionClass: 'toast-bottom-right',
           });
           return EMPTY;
@@ -138,7 +138,7 @@ export class ProfileOrdersTabComponent implements OnInit, OnDestroy {
         next: () => {
           this.isCancelConfirmOpen.set(false);
           this.orderToCancelId.set(null);
-          this.toastr.success('Order cancelled successfully', 'My Orders', {
+          this.toastr.success('Order cancelled successfully', undefined, {
             positionClass: 'toast-bottom-right',
           });
         },

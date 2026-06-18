@@ -16,7 +16,7 @@ export const ORDER_STATUSES: OrderStatus[] = [
   'Cancelled',
 ];
 
-/** Status value sent to PUT /api/Order/{orderId}/status when cancelling. */
+/** Status value representing a cancelled order in the UI. */
 export const ORDER_CANCELLED_STATUS: OrderStatus = 'Cancelled';
 
 export interface OrderLineItem {

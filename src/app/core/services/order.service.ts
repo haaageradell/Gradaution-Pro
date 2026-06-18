@@ -116,11 +116,23 @@ export class OrderService {
     );
   }
 
-  /** Cancel order — PUT /api/Order/{orderId}/status with status Cancelled */
-  cancelOrder(orderId: string): Observable<unknown> {
-    return this.updateOrderStatus(orderId, {
-      status: ORDER_CANCELLED_STATUS,
-    });
+  /** Cancel order — PUT /api/Order/{orderId}/cancel */
+  cancelOrder(orderId: number): Observable<unknown> {
+    const url = `${this.orderBaseUrl}/${encodeURIComponent(String(orderId))}/cancel`;
+    return this.http.put<unknown>(url, {}).pipe(
+      tap(() => this.patchOrderStatusLocal(String(orderId), ORDER_CANCELLED_STATUS)),
+      catchError((err) => {
+        console.error('[OrderService] cancelOrder error:', err);
+        return throwError(() => err);
+      }),
+    );
+  }
+
+  private patchOrderStatusLocal(orderId: string, status: OrderSummary['status']): void {
+    const updated = this.ordersSubject.value.map((order) =>
+      order.id === orderId ? { ...order, status } : order,
+    );
+    this.ordersSubject.next(updated);
   }
 
   /** POST /api/Order/{orderId}/coupon */
