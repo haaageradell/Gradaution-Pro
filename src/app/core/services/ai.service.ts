@@ -21,16 +21,59 @@ export class AiService {
   readonly uploadedImage = signal<string | null>(null);
   readonly selectedGlasses = signal<Product | null>(null);
 
-  tryOnUploadedPhoto(imageFile: File, glassesUrl: string): Observable<Blob> {
-    const formData = new FormData();
-    formData.append('image', imageFile, imageFile.name || 'face.jpg');
-    formData.append('glasses_url', glassesUrl);
-    formData.append('glasses', glassesUrl);
-    formData.append('twoDImageUrl', glassesUrl);
+  tryOnUploadedPhoto(imageFile: File, product: Product): Observable<Blob> {
+    // Resolve the glasses image URL from the product's twoDImageUrl (priority)
+    const glassesUrl = this.resolveProductImage(product);
 
-    return this.http.post('http://51.21.135.52:5000/try-on', formData, {
+    console.log('[AiService] === TRY-ON REQUEST ===');
+    console.log('[AiService] Product:', product.name, '(id:', product.id, ')');
+    console.log('[AiService] twoDImageUrl:', product.twoDImageUrl);
+    console.log('[AiService] Resolved glassesUrl:', glassesUrl);
+    console.log('[AiService] User image file:', imageFile.name, imageFile.type, imageFile.size, 'bytes');
+
+    if (!glassesUrl) {
+      console.error('[AiService] No glasses image URL available for product:', product);
+      return throwError(() => new Error(
+        'The selected glasses product does not have a 2D image. Please select a different product.'
+      ));
+    }
+
+    const formData = new FormData();
+    formData.append('userImage', imageFile, imageFile.name || 'face.jpg');
+    formData.append('glassesUrl', glassesUrl);
+
+    const endpoint = `${environment.apiUrl.replace(/\/$/, '')}/api/Ai/try-on`;
+    console.log('[AiService] POST endpoint:', endpoint);
+    console.log('[AiService] FormData fields: userImage=' + (imageFile.name || 'face.jpg') + ', glassesUrl=' + glassesUrl);
+
+    return this.http.post(endpoint, formData, {
       responseType: 'blob',
-    });
+    }).pipe(
+      tap((blob) => {
+        console.log('[AiService] === TRY-ON RESPONSE ===');
+        console.log('[AiService] Response blob type:', blob.type, 'size:', blob.size, 'bytes');
+      }),
+      catchError((error: HttpErrorResponse) => {
+        console.error('[AiService] === TRY-ON ERROR ===');
+        console.error('[AiService] Status:', error.status, error.statusText);
+        console.error('[AiService] Error object:', error);
+
+        // If error body is a Blob (due to responseType: 'blob'), read it as text
+        if (error.error instanceof Blob) {
+          error.error.text().then((text: string) => {
+            console.error('[AiService] Error response body:', text);
+          });
+        }
+
+        const message =
+          typeof error.error === 'string'
+            ? error.error
+            : (error.error?.message ??
+              error.error?.title ??
+              `Try-on request failed (HTTP ${error.status}). Please try again.`);
+        return throwError(() => new Error(message));
+      }),
+    );
   }
 
   analyzeFace(imageFile: File): Observable<FaceAnalysisResult> {
@@ -88,10 +131,11 @@ export class AiService {
   }
 
   resolveProductImage(product: Product): string {
+    // twoDImageUrl is the isolated glasses image required by the AI try-on API
     const twoD = product.twoDImageUrl?.trim() ?? '';
     return (
-      product.imageUrl?.trim() ||
       twoD ||
+      product.imageUrl?.trim() ||
       product.thumbnailUrl?.trim() ||
       ''
     );
