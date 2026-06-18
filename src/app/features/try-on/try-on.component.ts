@@ -38,7 +38,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
   readonly availableProducts = signal<Product[]>([]);
   readonly errorMessage = signal<string | null>(null);
 
-
   // Upload Photo Mode state
   readonly isUploadPhotoMode = signal(false);
   readonly selectedImageFile = signal<File | null>(null);
@@ -48,6 +47,7 @@ export class TryOnComponent implements OnInit, OnDestroy {
   readonly photoError = signal<string | null>(null);
   private previewObjectUrl: string | null = null;
   private resultObjectUrl: string | null = null;
+  private arStopped = false;
 
   // Lowered default coordinates so the glasses rest naturally on the nose bridge and eye line
   readonly glassesScale = signal<number>(0.085);
@@ -111,7 +111,7 @@ export class TryOnComponent implements OnInit, OnDestroy {
       this.passedProduct = state.product ?? null;
       this.passedProductId = state.productId ?? state.product?.id ?? null;
       this.passedMediaUrl = state.mediaUrl ?? state.product?.mediaUrl ?? null;
-      console.log('[TryOnComponent] Constructor state parsed:', state);
+      // console.log('[TryOnComponent] Constructor state parsed:', state);
     }
   }
 
@@ -151,8 +151,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
     // Stop AR and clean up component state
     this.stopAR();
 
-
-
     // Clean up upload photo object URLs
     this.resetUploadState();
 
@@ -167,12 +165,18 @@ export class TryOnComponent implements OnInit, OnDestroy {
 
       // Remove any stale <a-scene> elements that leaked outside the component
       document.querySelectorAll('body > a-scene').forEach((scene) => {
-        try { (scene as any).systems?.['mindar-face-system']?.stop(); } catch (_) { /* ignore */ }
+        try {
+          (scene as any).systems?.['mindar-face-system']?.stop();
+        } catch (_) {
+          /* ignore */
+        }
         scene.remove();
       });
 
       // Remove orphaned canvases A-Frame may leave behind
-      document.querySelectorAll('body > canvas.a-canvas').forEach((c) => c.remove());
+      document
+        .querySelectorAll('body > canvas.a-canvas')
+        .forEach((c) => c.remove());
     }
   }
 
@@ -210,35 +214,35 @@ export class TryOnComponent implements OnInit, OnDestroy {
   }
 
   loadCatalog(): void {
-    console.log(
-      '[TryOnComponent] Fetching product catalog from backend API...',
-    );
+    // console.log(
+    //   '[TryOnComponent] Fetching product catalog from backend API...',
+    // );
     this.productService.getAllProducts().subscribe({
       next: (response) => {
         // Log 1: Raw API response
-        console.log('[TryOnComponent] RAW API RESPONSE:', response);
+        // console.log('[TryOnComponent] RAW API RESPONSE:', response);
 
         // Log 2: response.data or response array
         const rawList = Array.isArray(response)
           ? response
           : ((response as any)?.data ?? (response as any)?.Data ?? []);
-        console.log('[TryOnComponent] EXTRACTED response.data/array:', rawList);
+        // console.log('[TryOnComponent] EXTRACTED response.data/array:', rawList);
 
         // Map and normalize product fields
         const mappedList = rawList.map((p: any) =>
           this.extractProductFields(p),
         );
-        console.log('[TryOnComponent] MAPPED normalized products:', mappedList);
+        // console.log('[TryOnComponent] MAPPED normalized products:', mappedList);
 
         // Filter products to ONLY include those with a valid .glb in the mediaUrl
         const filtered = mappedList.filter((prod: Product) => {
           const mUrl = String(prod.mediaUrl || '').trim();
           return mUrl.toLowerCase().includes('.glb');
         });
-        console.log(
-          '[TryOnComponent] FILTERED products containing mediaUrl:',
-          filtered,
-        );
+        // console.log(
+        //   '[TryOnComponent] FILTERED products containing mediaUrl:',
+        //   filtered,
+        // );
         this.availableProducts.set(filtered);
 
         if (
@@ -285,11 +289,12 @@ export class TryOnComponent implements OnInit, OnDestroy {
       null;
     const productObj = this.passedProduct ?? serviceSelected ?? null;
 
-    console.log('[TryOnComponent] INITIALIZING SELECTION:', {
-      id,
-      mediaUrl,
-      hasObj: !!productObj,
-    });
+    // console.log('[TryOnComponent] INITIALIZING SELECTION:',
+    //    {
+    //   id,
+    //   mediaUrl,
+    //   hasObj: !!productObj,
+    // });
 
     let productToSelect: Product | null = null;
 
@@ -306,14 +311,14 @@ export class TryOnComponent implements OnInit, OnDestroy {
       if (productToSelect) {
         this.selectedProduct.set(productToSelect);
         this.selectedModelUrl.set(productToSelect.mediaUrl || null);
-        console.log(
-          '[TryOnComponent] Selected model from catalog list:',
-          productToSelect,
-        );
-        console.log(
-          '[TryOnComponent] SELECTED MODEL URL:',
-          productToSelect.mediaUrl,
-        );
+        // console.log(
+        //   '[TryOnComponent] Selected model from catalog list:',
+        //   productToSelect,
+        // );
+        // console.log(
+        //   '[TryOnComponent] SELECTED MODEL URL:',
+        //   productToSelect.mediaUrl,
+        // );
         return;
       }
 
@@ -367,14 +372,14 @@ export class TryOnComponent implements OnInit, OnDestroy {
       productToSelect = this.availableProducts()[0];
       this.selectedProduct.set(productToSelect);
       this.selectedModelUrl.set(productToSelect.mediaUrl || null);
-      console.log(
-        '[TryOnComponent] Direct access fallback selected:',
-        productToSelect,
-      );
-      console.log(
-        '[TryOnComponent] SELECTED MODEL URL:',
-        productToSelect.mediaUrl,
-      );
+      // console.log(
+      //   '[TryOnComponent] Direct access fallback selected:',
+      //   productToSelect,
+      // );
+      // console.log(
+      //   '[TryOnComponent] SELECTED MODEL URL:',
+      //   productToSelect.mediaUrl,
+      // );
     } else {
       console.log('[TryOnComponent] NO MODEL SELECTED.');
     }
@@ -448,7 +453,9 @@ export class TryOnComponent implements OnInit, OnDestroy {
       return;
     }
     if (!product) {
-      this.photoError.set('No glasses product selected. Please go back and select a product.');
+      this.photoError.set(
+        'No glasses product selected. Please go back and select a product.',
+      );
       return;
     }
 
@@ -460,15 +467,35 @@ export class TryOnComponent implements OnInit, OnDestroy {
     this.resultImageUrl.set(null);
 
     console.log('[TryOnComponent] === PHOTO TRY-ON REQUEST ===');
-    console.log('[TryOnComponent] File:', file.name, file.type, file.size, 'bytes');
-    console.log('[TryOnComponent] Product:', product.name, '(id:', product.id, ')');
-    console.log('[TryOnComponent] twoDImageUrl (glassesUrl):', product.twoDImageUrl);
+    console.log(
+      '[TryOnComponent] File:',
+      file.name,
+      file.type,
+      file.size,
+      'bytes',
+    );
+    console.log(
+      '[TryOnComponent] Product:',
+      product.name,
+      '(id:',
+      product.id,
+      ')',
+    );
+    console.log(
+      '[TryOnComponent] twoDImageUrl (glassesUrl):',
+      product.twoDImageUrl,
+    );
 
     const sub = this.aiService.tryOnUploadedPhoto(file, product).subscribe({
       next: (blob: Blob) => {
         if (this.destroyed) return;
         console.log('[TryOnComponent] === PHOTO TRY-ON RESPONSE ===');
-        console.log('[TryOnComponent] Response blob:', blob.type, blob.size, 'bytes');
+        console.log(
+          '[TryOnComponent] Response blob:',
+          blob.type,
+          blob.size,
+          'bytes',
+        );
 
         // Revoke previous result URL
         if (this.resultObjectUrl) {
@@ -482,7 +509,7 @@ export class TryOnComponent implements OnInit, OnDestroy {
         if (this.destroyed) return;
         console.error('[TryOnComponent] Photo try-on failed:', err);
         this.photoError.set(
-          err?.message || 'Failed to generate try-on result. Please try again.'
+          err?.message || 'Failed to generate try-on result. Please try again.',
         );
         this.isPhotoProcessing.set(false);
       },
@@ -534,6 +561,8 @@ export class TryOnComponent implements OnInit, OnDestroy {
   }
 
   startAR(): void {
+    this.arStopped = false;
+
     if (!isPlatformBrowser(this.platformId)) {
       return;
     }
@@ -610,8 +639,13 @@ export class TryOnComponent implements OnInit, OnDestroy {
 
   private checkAndMoveVideo(): void {
     if (!isPlatformBrowser(this.platformId)) return;
+    let attempts = 0;
 
     const moveVideo = () => {
+      if (attempts++ > 40) {
+        console.warn('Video not found');
+        return;
+      }
       const video = document.querySelector('body > video') as HTMLVideoElement;
       const container = document.querySelector('.tryon-container');
       if (video && container) {
@@ -651,11 +685,14 @@ export class TryOnComponent implements OnInit, OnDestroy {
   }
 
   stopAR(): void {
+    if (this.arStopped) {
+      return;
+    }
+    this.arStopped = true;
     if (!isPlatformBrowser(this.platformId)) {
       return;
     }
-
-    console.log('[TryOnComponent] Tearing down AR session.');
+    // console.log('[TryOnComponent] Tearing down AR session.');
 
     if (this.safetyTimeoutId) {
       clearTimeout(this.safetyTimeoutId);
@@ -663,10 +700,15 @@ export class TryOnComponent implements OnInit, OnDestroy {
     }
 
     const sceneEl = document.querySelector('a-scene') as any;
+
     if (sceneEl) {
-      const faceSystem = sceneEl.systems?.['mindar-face-system'];
+      const faceSystem = sceneEl?.systems?.['mindar-face-system'];
       if (faceSystem) {
-        faceSystem.stop();
+        try {
+          faceSystem.stop();
+        } catch (error) {
+          // console.warn('MindAR stop failed:', error);
+        }
       }
     }
 
@@ -695,7 +737,6 @@ export class TryOnComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    this.stopAR();
     if (isPlatformBrowser(this.platformId)) {
       window.history.back();
     } else {

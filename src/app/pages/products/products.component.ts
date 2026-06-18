@@ -94,30 +94,30 @@ export class ProductsComponent implements OnInit {
       .pipe(
         switchMap((response) => {
           const productsArray = this.extractProducts(response);
-          return this.brandService.enrichProducts(productsArray).pipe(
-            map((enrichedProducts) => ({ response, enrichedProducts })),
-          );
+          return this.brandService
+            .enrichProducts(productsArray)
+            .pipe(map((enrichedProducts) => ({ response, enrichedProducts })));
         }),
       )
       .subscribe({
-      next: ({ response, enrichedProducts }) => {
-        this.products = enrichedProducts.map((product) =>
-          this.mapProductToCardItem(product),
-        );
+        next: ({ response, enrichedProducts }) => {
+          this.products = enrichedProducts.map((product) =>
+            this.mapProductToCardItem(product),
+          );
 
-        this.totalCount = Array.isArray(response)
-          ? this.products.length
-          : (response.totalCount ?? this.products.length);
+          this.totalCount = Array.isArray(response)
+            ? this.products.length
+            : (response.totalCount ?? this.products.length);
 
-        this.isLoading = false;
-      },
+          this.isLoading = false;
+        },
 
-      error: () => {
-        this.products = [];
-        this.errorMessage = 'Failed to load products';
-        this.isLoading = false;
-      },
-    });
+        error: () => {
+          this.products = [];
+          this.errorMessage = 'Failed to load products';
+          this.isLoading = false;
+        },
+      });
   }
 
   private mapProductToCardItem(product: Product): ProductItem {
