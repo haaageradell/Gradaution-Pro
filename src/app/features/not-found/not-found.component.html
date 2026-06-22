@@ -1,1 +1,67 @@
-<p>not-found works!</p>
+<section
+  class="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#faf7fd] via-white to-[#f3edf8] px-4 py-12"
+>
+  <div
+    class="w-full max-w-3xl rounded-[32px] border border-white/60 bg-white/80 p-8 shadow-[0_20px_60px_rgba(79,38,110,0.12)] backdrop-blur-sm md:p-12"
+  >
+    <!-- 404 -->
+    <div class="mb-8 flex items-center justify-center">
+      <span
+        class="text-[90px] font-black leading-none text-[#4f266e] md:text-[140px]"
+        >4</span
+      >
+
+      <div
+        class="mx-2 flex h-24 w-24 items-center justify-center rounded-full border-4 border-[#4f266e] md:h-32 md:w-32"
+      >
+        <i class="fa-solid fa-glasses text-3xl text-[#4f266e] md:text-5xl"></i>
+      </div>
+
+      <span
+        class="text-[90px] font-black leading-none text-[#4f266e] md:text-[140px]"
+        >4</span
+      >
+    </div>
+
+    <!-- Badge -->
+    <div
+      class="mb-4 inline-flex items-center rounded-full bg-[#f4eef8] px-4 py-2 text-xs font-semibold text-[#4f266e]"
+    >
+      Optivio AI Eyewear
+    </div>
+
+    <!-- Title -->
+    <h1
+      class="mb-4 text-3xl font-bold tracking-tight text-[#2b1f3b] md:text-5xl"
+    >
+      Oops! We Lost This Frame
+    </h1>
+
+    <!-- Description -->
+    <p
+      class="mx-auto mb-10 max-w-xl text-base leading-8 text-[#7b7288] md:text-lg"
+    >
+      The page you're looking for seems to be out of focus. Let's help you find
+      the perfect frame again.
+    </p>
+
+    <!-- Buttons -->
+    <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
+      <a
+        routerLink="/home"
+        class="inline-flex items-center gap-2 rounded-full bg-[#4f266e] px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-[#3e1d57]"
+      >
+        <i class="fa-solid fa-house"></i>
+        Back to Home
+      </a>
+
+      <a
+        routerLink="/products"
+        class="inline-flex items-center gap-2 rounded-full border border-[#d8cae6] bg-white px-8 py-3 font-semibold text-[#4f266e] transition-all duration-300 hover:-translate-y-1 hover:border-[#4f266e]"
+      >
+        <i class="fa-solid fa-glasses"></i>
+        Browse Products
+      </a>
+    </div>
+  </div>
+</section>
