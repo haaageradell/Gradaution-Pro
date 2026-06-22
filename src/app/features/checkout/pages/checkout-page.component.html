@@ -158,7 +158,8 @@
                 type="text"
                 formControlName="holderName"
                 placeholder="Name on card"
-                class="h-10 w-full rounded border border-gray-300 bg-white px-3 text-[12px] placeholder:text-gray-400"
+                (input)="onNameInput($event)"
+                class="h-10 w-full rounded border border-gray-300 bg-white px-3 text-[12px] uppercase placeholder:text-gray-400"
               />
             </div>
             <div>
@@ -169,6 +170,9 @@
                 type="text"
                 formControlName="cardNumber"
                 placeholder="0000 0000 0000 0000"
+                maxlength="19"
+                inputmode="numeric"
+                (input)="onCardNumberInput($event)"
                 class="h-10 w-full rounded border border-gray-300 bg-white px-3 text-[12px] placeholder:text-gray-400"
               />
             </div>
@@ -182,6 +186,9 @@
                   type="text"
                   formControlName="expireDate"
                   placeholder="MM/YY"
+                  maxlength="5"
+                  inputmode="numeric"
+                  (input)="onExpiryInput($event)"
                   class="h-10 w-full rounded border border-gray-300 bg-white px-3 text-[12px] placeholder:text-gray-400"
                 />
               </div>
@@ -199,6 +206,8 @@
                   type="password"
                   formControlName="cvv"
                   placeholder="CVV"
+                  maxlength="3"
+                  (input)="onCvvInput($event)"
                   class="h-10 w-full rounded border border-gray-300 bg-white px-3 text-[12px] placeholder:text-gray-400"
                 />
               </div>

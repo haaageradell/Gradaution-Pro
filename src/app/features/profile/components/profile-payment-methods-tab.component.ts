@@ -9,12 +9,16 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { EMPTY, Subject, catchError, finalize, map, switchMap, takeUntil } from 'rxjs';
+  EMPTY,
+  Subject,
+  catchError,
+  finalize,
+  map,
+  switchMap,
+  takeUntil,
+} from 'rxjs';
 import type { PaymentMethodView } from '../../../core/models/payment-method.models';
 import { PaymentMethodService } from '../../../core/services/payment-method.service';
 import { buildCreatePaymentMethodRequest } from '../../../core/utils/payment-card.utils';
@@ -43,7 +47,10 @@ export class ProfilePaymentMethodsTabComponent implements OnInit, OnDestroy {
   readonly cardForm = this.fb.group({
     holderName: ['', [Validators.required, Validators.minLength(2)]],
     cardNumber: ['', [Validators.required]],
-    expireDate: ['', [Validators.required]],
+    expireDate: [
+      '',
+      [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])\/\d{2}$/)],
+    ],
     cvv: ['', [Validators.required, Validators.pattern(/^\d{3,4}$/)]],
     saveCard: [true],
   });
@@ -93,7 +100,8 @@ export class ProfilePaymentMethodsTabComponent implements OnInit, OnDestroy {
     const year = pm.expiryYear;
     if (month != null && year != null) {
       const mm = String(month).padStart(2, '0');
-      const yy = year < 100 ? String(2000 + year).slice(-2) : String(year).slice(-2);
+      const yy =
+        year < 100 ? String(2000 + year).slice(-2) : String(year).slice(-2);
       return `Expires ${mm}/${yy}`;
     }
     return 'Expiry date unavailable';
@@ -152,7 +160,11 @@ export class ProfilePaymentMethodsTabComponent implements OnInit, OnDestroy {
 
     const formValues = this.cardForm.getRawValue();
     const cardNumber = (formValues.cardNumber ?? '').replace(/\s/g, '');
-    if (cardNumber.length < 13 || cardNumber.length > 19 || !/^\d+$/.test(cardNumber)) {
+    if (
+      cardNumber.length < 13 ||
+      cardNumber.length > 19 ||
+      !/^\d+$/.test(cardNumber)
+    ) {
       this.toastr.warning('Enter a valid card number (13–19 digits).');
       return;
     }
@@ -175,8 +187,14 @@ export class ProfilePaymentMethodsTabComponent implements OnInit, OnDestroy {
         switchMap(() => this.paymentMethodService.getPaymentMethods()),
         map((list) => list.filter((pm) => pm.id.trim() !== '')),
         catchError((err: HttpErrorResponse) => {
-          console.error('[ProfilePaymentMethodsTab] addPaymentMethod error:', err);
-          const message = this.extractErrorMessage(err, 'Could not save payment method.');
+          console.error(
+            '[ProfilePaymentMethodsTab] addPaymentMethod error:',
+            err,
+          );
+          const message = this.extractErrorMessage(
+            err,
+            'Could not save payment method.',
+          );
           this.toastr.error(message);
           return EMPTY;
         }),
@@ -205,8 +223,14 @@ export class ProfilePaymentMethodsTabComponent implements OnInit, OnDestroy {
         switchMap(() => this.paymentMethodService.getPaymentMethods()),
         map((list) => list.filter((pm) => pm.id.trim() !== '')),
         catchError((err: HttpErrorResponse) => {
-          console.error('[ProfilePaymentMethodsTab] deletePaymentMethod error:', err);
-          const message = this.extractErrorMessage(err, 'Could not remove payment method.');
+          console.error(
+            '[ProfilePaymentMethodsTab] deletePaymentMethod error:',
+            err,
+          );
+          const message = this.extractErrorMessage(
+            err,
+            'Could not remove payment method.',
+          );
           this.toastr.error(message);
           return EMPTY;
         }),
@@ -236,8 +260,14 @@ export class ProfilePaymentMethodsTabComponent implements OnInit, OnDestroy {
       .pipe(
         map((list) => list.filter((pm) => pm.id.trim() !== '')),
         catchError((err: HttpErrorResponse) => {
-          console.error('[ProfilePaymentMethodsTab] loadPaymentMethods error:', err);
-          const message = this.extractErrorMessage(err, 'Failed to load payment methods.');
+          console.error(
+            '[ProfilePaymentMethodsTab] loadPaymentMethods error:',
+            err,
+          );
+          const message = this.extractErrorMessage(
+            err,
+            'Failed to load payment methods.',
+          );
           this.loadError.set(message);
           this.toastr.error(message);
           return EMPTY;
@@ -254,10 +284,15 @@ export class ProfilePaymentMethodsTabComponent implements OnInit, OnDestroy {
     return this.isBrowser && Boolean(localStorage.getItem('token')?.trim());
   }
 
-  private extractErrorMessage(err: HttpErrorResponse, fallback: string): string {
+  private extractErrorMessage(
+    err: HttpErrorResponse,
+    fallback: string,
+  ): string {
     const backendMessage =
       (err.error as { message?: string; title?: string })?.message ??
       (err.error as { message?: string; title?: string })?.title;
-    return backendMessage ?? (typeof err.error === 'string' ? err.error : fallback);
+    return (
+      backendMessage ?? (typeof err.error === 'string' ? err.error : fallback)
+    );
   }
 }

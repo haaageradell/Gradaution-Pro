@@ -8,7 +8,18 @@ import {
   Validators,
 } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { catchError, EMPTY, finalize, forkJoin, map, Observable, of, switchMap, tap, throwError } from 'rxjs';
+import {
+  catchError,
+  EMPTY,
+  finalize,
+  forkJoin,
+  map,
+  Observable,
+  of,
+  switchMap,
+  tap,
+  throwError,
+} from 'rxjs';
 import {
   CartCoupon,
   CartLineItem,
@@ -106,10 +117,23 @@ export class CheckoutPageComponent implements OnInit {
   private wishedMap: Record<number, boolean> = {};
 
   readonly cardForm = this.fb.group({
-    holderName: ['', Validators.required],
-    cardNumber: ['', Validators.required],
-    expireDate: ['', Validators.required],
-    cvv: ['', Validators.required],
+    holderName: [
+      '',
+      [
+        Validators.required,
+        Validators.minLength(3),
+        Validators.pattern(/^[a-zA-Z\s]+$/),
+      ],
+    ],
+    cardNumber: [
+      '',
+      [Validators.required, Validators.pattern(/^\d{4}\s\d{4}\s\d{4}\s\d{4}$/)],
+    ],
+    expireDate: [
+      '',
+      [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])\/\d{2}$/)],
+    ],
+    cvv: ['', [Validators.required, Validators.pattern(/^\d{3}$/)]],
     saveCard: [true],
   });
 
@@ -170,7 +194,10 @@ export class CheckoutPageComponent implements OnInit {
 
   selectPayment(id: string): void {
     this.selectedPaymentMethodId = id;
-    console.log('[Checkout] selectedPaymentMethodId:', this.selectedPaymentMethodId);
+    console.log(
+      '[Checkout] selectedPaymentMethodId:',
+      this.selectedPaymentMethodId,
+    );
   }
 
   deletePaymentMethod(id: string, event: Event): void {
@@ -250,7 +277,10 @@ export class CheckoutPageComponent implements OnInit {
     }
 
     console.log('[Checkout] payment form values:', this.cardForm.getRawValue());
-    console.log('[Checkout] selectedPaymentMethodId:', this.selectedPaymentMethodId);
+    console.log(
+      '[Checkout] selectedPaymentMethodId:',
+      this.selectedPaymentMethodId,
+    );
 
     const selectedPayment = this.resolveSelectedPayment();
     if (selectedPayment?.id) {
@@ -384,9 +414,15 @@ export class CheckoutPageComponent implements OnInit {
           this.paymentMethods = this.filterValidPaymentMethods(
             Array.isArray(payments) ? payments : [],
           );
-          console.log('[Checkout] GET /api/PaymentMethod response:', this.paymentMethods);
+          console.log(
+            '[Checkout] GET /api/PaymentMethod response:',
+            this.paymentMethods,
+          );
           this.selectedPaymentMethodId = this.paymentMethods[0]?.id ?? null;
-          console.log('[Checkout] selectedPaymentMethodId:', this.selectedPaymentMethodId);
+          console.log(
+            '[Checkout] selectedPaymentMethodId:',
+            this.selectedPaymentMethodId,
+          );
           if (Array.isArray(orders) && orders.length) {
             this.orderIdForCoupon = orders[0]!.id || null;
           }
@@ -439,7 +475,7 @@ export class CheckoutPageComponent implements OnInit {
 
   private savePaymentMethodFromForm(): Observable<PaymentMethodView | null> {
     const formValues = this.cardForm.getRawValue();
-    console.log('[Checkout] payment form values:', formValues);
+    // console.log('[Checkout] payment form values:', formValues);
 
     if (this.cardForm.invalid) {
       this.cardForm.markAllAsTouched();
@@ -473,7 +509,10 @@ export class CheckoutPageComponent implements OnInit {
           null;
         if (saved?.id) {
           this.selectedPaymentMethodId = saved.id;
-          console.log('[Checkout] selectedPaymentMethodId:', this.selectedPaymentMethodId);
+          console.log(
+            '[Checkout] selectedPaymentMethodId:',
+            this.selectedPaymentMethodId,
+          );
         }
         this.cardForm.reset({ saveCard: true });
         return saved;
@@ -551,7 +590,10 @@ export class CheckoutPageComponent implements OnInit {
   private executePlaceOrder(paymentMethodId: string): void {
     const body = this.buildOrderBody(paymentMethodId);
     console.log('[Checkout] place order payload:', body);
-    console.log('[Checkout] selectedPaymentMethodId:', this.selectedPaymentMethodId);
+    console.log(
+      '[Checkout] selectedPaymentMethodId:',
+      this.selectedPaymentMethodId,
+    );
 
     this.isPlacingOrder = true;
     this.orderService
@@ -603,12 +645,49 @@ export class CheckoutPageComponent implements OnInit {
     }
     return 'Card';
   }
+  onCardNumberInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
 
+    let value = input.value.replace(/\D/g, '');
+
+    value = value.substring(0, 16);
+
+    value = value.replace(/(.{4})/g, '$1 ').trim();
+
+    input.value = value;
+
+    this.cardForm.patchValue({ cardNumber: value }, { emitEvent: false });
+  }
+  onNameInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    input.value = input.value.replace(/[^a-zA-Z\s]/g, '').toUpperCase();
+
+    this.cardForm.patchValue({ holderName: input.value }, { emitEvent: false });
+  }
+  onExpiryInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    let value = input.value.replace(/\D/g, ''); // يشيل أي حرف
+
+    value = value.substring(0, 4);
+
+    if (value.length > 2) {
+      value = value.substring(0, 2) + '/' + value.substring(2);
+    }
+
+    input.value = value;
+
+    this.cardForm.patchValue({ expireDate: value }, { emitEvent: false });
+  }
   private toExpiryIso(month: number, year: number): string {
     const d = new Date(Date.UTC(year, month, 0, 23, 59, 59));
     return d.toISOString();
   }
-
+  onCvvInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    input.value = input.value.replace(/\D/g, '').slice(0, 3);
+  }
   private buildEstimatedDeliveryIso(): string {
     const parsed = Date.parse(this.estimatedDeliveryLabel);
     if (Number.isFinite(parsed)) {
